@@ -16,3 +16,9 @@ void loop() {
     digitalWrite(ledPin, LOW);  // 否则，熄灭LED灯
   }
 }
+
+
+// put function definitions here:
+//int myFunction(int x, int y) {
+//  return x + y;
+//}
