@@ -12,6 +12,14 @@
 
 
 
+//yxr
+#include <Arduino.h>
+#include <Wire.h>
+#include <BH1750.h>
+
+
+
+
 
 
 
@@ -34,6 +42,24 @@ unsigned long debounceDelay = 50;
 
 
 
+//yxr
+BH1750 lightSensor;
+const int ledPin = 16; // LED的控制引脚连接到GPIO 16
+const int pirPin = 14; // HC-SR312微型人体感应模块的信号引脚连接到GPIO 14
+// 定义引脚
+const int analogPin = 36;   // 模拟输入引脚
+const int digitalPin = 39;  // 数字输入引脚
+const int ioPin = 27;       // I/O接口引脚
+const int buzzerPin = 13;   // 蜂鸣器引脚
+
+// 定义阈值
+const int threshold = 4000;  // 模拟输入阈值
+const int alarmThreshold = 1; // 数字输入阈值
+
+
+
+
+
 
 
 
@@ -51,6 +77,26 @@ void setup() {
   pinMode(SWITCH_PIN, INPUT_PULLUP); // 使用内部上拉电阻
   pinMode(GREEN_LED, OUTPUT);
   pinMode(RED_LED, OUTPUT);  
+  
+  
+  
+  
+  
+  
+  //yxr
+    Serial.begin(9600);
+  pinMode(ledPin, OUTPUT);
+  pinMode(pirPin, INPUT);
+
+  Wire.begin(21, 22); // 初始化I2C总线，SDA连接到GPIO 21，SCL连接到GPIO 22
+  lightSensor.begin();
+  Serial.begin(9600);
+  pinMode(analogPin, INPUT);
+  pinMode(digitalPin, INPUT);
+  pinMode(ioPin, INPUT);
+  pinMode(buzzerPin, OUTPUT); 
+  digitalWrite(buzzerPin, HIGH);
+  // 设置蜂鸣器引脚为输出模式
 }
 
 
@@ -163,4 +209,73 @@ void loop() {
       digitalWrite(RED_LED, LOW);
       break;
   }
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  //yxr
+    // 读取光线强度
+  uint16_t lux = lightSensor.readLightLevel();
+  Serial.print("Light level (lux): ");
+  Serial.println(lux);
+
+  // 读取人体感应模块状态
+  int motionDetected = digitalRead(pirPin);
+  Serial.print("People Condition: ");
+  Serial.println(motionDetected);
+  
+
+  // 当光线暗且有人时，点亮LED
+  if (lux < 500 && motionDetected == HIGH) {
+    digitalWrite(ledPin, HIGH); // 点亮LED
+    Serial.print("Light Condition: HIGH "); 
+  } else {
+    digitalWrite(ledPin, LOW); // 关闭LED
+    Serial.print("Light Condition: LOW ");
+  }
+  delay(1000); // 延迟1秒钟
+  // 读取模拟输入
+  int sensorValue = analogRead(analogPin);
+
+  // 如果模拟输入值超过阈值，触发告警
+  if (sensorValue > threshold) {
+    Serial.println("Gas leak detected!");
+    // 触发蜂鸣器
+    digitalWrite(buzzerPin, HIGH);  // 将蜂鸣器引脚设置为高电平
+    delay(1000);  // 延迟1秒钟
+    digitalWrite(buzzerPin, LOW);  // 将蜂鸣器引脚设置为低电平
+  }
+
+  // 读取数字输入
+  int digitalValue = digitalRead(digitalPin);
+
+  // 如果数字输入为高电平，表示发生告警
+  if (digitalValue == LOW) {
+    Serial.println("Digital alarm triggered!");
+    // 触发蜂鸣器
+    // digitalWrite(buzzerPin, HIGH);  // 将蜂鸣器引脚设置为高电平
+    // delay(1000);  // 延迟1秒钟
+    digitalWrite(buzzerPin, LOW);  // 将蜂鸣器引脚设置为低电平
+  }else{
+    digitalWrite(buzzerPin, HIGH); 
+  }
+
+  // 读取I/O接口状态
+  // int ioValue = digitalRead(ioPin);
+
+  // // 如果I/O接口为高电平，表示发生告警
+  // if (ioValue == HIGH) {
+  //   Serial.println("I/O alarm triggered!");
+  //   // 触发蜂鸣器
+  //   digitalWrite(buzzerPin, HIGH);  // 将蜂鸣器引脚设置为高电平
+  //   delay(1000);  // 延迟1秒钟
+  //   digitalWrite(buzzerPin, LOW);  // 将蜂鸣器引脚设置为低电平
+  // }
+
+  delay(1000); // 延迟1秒钟
 }
