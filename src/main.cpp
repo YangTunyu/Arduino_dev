@@ -9,13 +9,12 @@
 #define SWITCH_PIN 13
 #define GREEN_LED 27
 #define RED_LED 14
-
-
-
 //yxr
 #include <Arduino.h>
 #include <Wire.h>
 #include <BH1750.h>
+
+
 
 
 
@@ -39,9 +38,6 @@ bool lastSwitchState = HIGH; // 按钮的上一个状态，初始为未按下
 unsigned long lastDebounceTime = 0;
 unsigned long debounceDelay = 50;
 
-
-
-
 //yxr
 BH1750 lightSensor;
 const int ledPin = 16; // LED的控制引脚连接到GPIO 16
@@ -58,15 +54,20 @@ const int alarmThreshold = 1; // 数字输入阈值
 
 
 
-
 //pzy
 // 定义红外人体感应模块和LED灯的引脚
 const int sensorPin = 14; // 人体感应模块的输出引脚连接到GPIO22
-const int ledPin = 16;     // LED灯连接到GPIO13
+//const int ledPin = 16;     // LED灯连接到GPIO13
 
 int potpin= 15;//定义模拟ADC接口15
 int ledpin= 16;//定义数字接口16（PWM 输出）
 int val=0;// 暂存来自传感器的变量数值
+
+
+//zby
+//int ledPin = 16; // 定义LED连接的引脚
+int brightness = 0; // LED亮度变量
+int fadeAmount = 1; // 亮度变化步长
 
 
 
@@ -117,7 +118,12 @@ pinMode(sensorPin, INPUT); // 设置人体感应模块引脚为输入
 Serial.begin(9600);//设置波特率为9600
 //模拟接口自动设置为输入
 
+
+
+//zby
+pinMode(ledPin, OUTPUT); // 设置LED引脚为输出模式
 }
+
 
 
 
@@ -316,4 +322,18 @@ Serial.println(val);//显示val 变量  用来串口监视
 
 analogWrite(ledpin,val/4);// 打开LED 并设置亮度（PWM 输出最大值255）
 delay(10);//延时0.01 秒
+
+
+//zby
+// LED逐渐变亮
+for (int i = 0; i <= 255; i += fadeAmount) {
+analogWrite(ledPin, i);
+delay(100); // 可以调整呼吸灯速度
+}
+
+// LED逐渐变暗
+for (int i = 255; i >= 0; i -= fadeAmount) {
+analogWrite(ledPin, i);
+delay(100); // 可以调整呼吸灯速度
+}
 }
