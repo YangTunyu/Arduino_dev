@@ -731,26 +731,90 @@ void loop()
   display.display();
 }
 
-
-
-
-//LED无极调光
+// LED无极调光
 #include <Arduino.h>
 
-int potpin= 15;//定义模拟接口15
-int ledpin= 13;//定义数字接口13（PWM 输出）
-int val=0;// 暂存来自传感器的变量数值
+int potpin = 15; // 定义模拟接口15
+int ledpin = 13; // 定义数字接口13（PWM 输出）
+int val = 0;     // 暂存来自传感器的变量数值
 void setup()
 {
-pinMode(ledpin,OUTPUT);//定义数字接口11 为输出
-Serial.begin(9600);//设置波特率为9600
-//模拟接口自动设置为输入
+  pinMode(ledpin, OUTPUT); // 定义数字接口11 为输出
+  Serial.begin(9600);      // 设置波特率为9600
+  // 模拟接口自动设置为输入
 }
 void loop()
 {
-val=analogRead(potpin);// 读取传感器的模拟值并赋值给val  读取模拟值范围 0-1023
-Serial.println(val);//显示val 变量  用来串口监视
+  val = analogRead(potpin); // 读取传感器的模拟值并赋值给val  读取模拟值范围 0-1023
+  Serial.println(val);      // 显示val 变量  用来串口监视
 
-analogWrite(ledpin,val/4);// 打开LED 并设置亮度（PWM 输出最大值255）
-delay(10);//延时0.01 秒
+  analogWrite(ledpin, val / 4); // 打开LED 并设置亮度（PWM 输出最大值255）
+  delay(10);                    // 延时0.01 秒
+}
+
+// ESP32双机双工通信
+#include <Arduino.h>
+
+void setup()
+{
+  // 启动串口调试输出
+  Serial.begin(115200);
+  // 初始化 ESP32 的串口2
+  Serial2.begin(250000);
+}
+
+void loop()
+{
+  // 发送一串数据到 ESP32 的串口2
+  byte sendData[] = {0xF1, 0xF2, 0xF3, 0xF4, 0xFF, 0xF1};
+  Serial.println("88");
+  Serial2.write(sendData, sizeof(sendData));
+  // 输出发送的数据
+  Serial.print("Sent data:111 ");
+  for (int i = 0; i < sizeof(sendData); i++)
+  {
+    Serial.print(sendData[i], HEX);
+    Serial.print(" ");
+  }
+  Serial.println();
+  delay(1000);
+}
+
+#include <Arduino.h>
+
+// 中断处理函数
+void serial2ISR()
+{
+  // 检查是否有可用数据从 ESP32 的串口2 接收
+  if (Serial2.available())
+  {
+    byte receivedData[6];
+    // 读取 6 个字节到 receivedData 数组中
+    Serial2.readBytes(receivedData, 6);
+
+    // 输出接收到的数据
+    Serial.print("Received data: ");
+    for (int i = 0; i < 6; i++)
+    {
+      Serial.print(receivedData[i], HEX);
+      Serial.print(" ");
+    }
+    Serial.println();
+  }
+}
+
+void setup()
+{
+  // 启动串口调试输出
+  Serial.begin(115200);
+  // 初始化 ESP32 的串口2
+  Serial2.begin(250000);
+  // 配置串口2的RX引脚为中断模式
+  pinMode(16, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(16), serial2ISR, FALLING);
+}
+
+void loop()
+{
+  // do nothing
 }
