@@ -99,7 +99,7 @@ void loop()
   if (isnan(event.relative_humidity))
   {
     Serial.println(F("Error reading humidity!"));
-    }
+  }
   else
   {
     Serial.print(F("Humidity: "));
@@ -108,7 +108,7 @@ void loop()
   }
 }
 
-//灯光自动控制
+// 灯光自动控制
 #include <Arduino.h>
 #include <Wire.h>
 #include <BH1750.h>
@@ -117,7 +117,8 @@ BH1750 lightSensor;
 const int ledPin = 16; // LED的控制引脚连接到GPIO 16
 const int pirPin = 14; // HC-SR312微型人体感应模块的信号引脚连接到GPIO 14
 
-void setup() {
+void setup()
+{
   Serial.begin(9600);
   pinMode(ledPin, OUTPUT);
   pinMode(pirPin, INPUT);
@@ -126,7 +127,8 @@ void setup() {
   lightSensor.begin();
 }
 
-void loop() {
+void loop()
+{
   // 读取光线强度
   uint16_t lux = lightSensor.readLightLevel();
   Serial.print("Light level (lux): ");
@@ -136,21 +138,22 @@ void loop() {
   int motionDetected = digitalRead(pirPin);
   Serial.print("People Condition: ");
   Serial.println(motionDetected);
-  
 
   // 当光线暗且有人时，点亮LED
-  if (lux < 500 && motionDetected == HIGH) {
+  if (lux < 500 && motionDetected == HIGH)
+  {
     digitalWrite(ledPin, HIGH); // 点亮LED
     Serial.print("Light Condition: HIGH ");
-  } else {
+  }
+  else
+  {
     digitalWrite(ledPin, LOW); // 关闭LED
     Serial.print("Light Condition: LOW");
   }
   delay(1000); // 延迟1秒钟
 }
 
-
-//获取光照强度信息
+// 获取光照强度信息
 /*
 
 Advanced BH1750 library usage example
@@ -188,12 +191,13 @@ will be 0x23 (by default).
 */
 BH1750 lightMeter(0x23);
 
-void setup() {
+void setup()
+{
 
   Serial.begin(9600);
 
   // Initialize the I2C bus (BH1750 library doesn't do this automatically)
-  Wire.begin(22,21);
+  Wire.begin(22, 21);
   // On esp8266 you can select SCL and SDA pins using Wire.begin(D4, D3);
 
   /*
@@ -229,15 +233,20 @@ void setup() {
   */
 
   // begin returns a boolean that can be used to detect setup problems.
-  if (lightMeter.begin(BH1750::CONTINUOUS_HIGH_RES_MODE)) {
+  if (lightMeter.begin(BH1750::CONTINUOUS_HIGH_RES_MODE))
+  {
     Serial.println(F("BH1750 Advanced begin"));
-  } else {
+  }
+  else
+  {
     Serial.println(F("Error initialising BH1750"));
   }
 }
 
-void loop() {
-  if (lightMeter.measurementReady()) {
+void loop()
+{
+  if (lightMeter.measurementReady())
+  {
     float lux = lightMeter.readLightLevel();
     Serial.print("Light: ");
     Serial.print(lux);
@@ -245,169 +254,303 @@ void loop() {
   }
 }
 
-//七彩氛围灯实现
+// 七彩氛围灯实现
 #include "Freenove_WS2812_Lib_for_ESP32.h"
 
-#define LEDS_COUNT  8
-#define LEDS_PIN    13
-#define CHANNEL     0
+#define LEDS_COUNT 8
+#define LEDS_PIN 13
+#define CHANNEL 0
 
 Freenove_ESP32_WS2812 strip = Freenove_ESP32_WS2812(LEDS_COUNT, LEDS_PIN, CHANNEL, TYPE_GRB);
 
-enum Mode { GRADIENT, JUMP, FLASH, RAINBOW, BREATH };
+enum Mode
+{
+  GRADIENT,
+  JUMP,
+  FLASH,
+  RAINBOW,
+  BREATH
+};
 Mode mode = GRADIENT;
 
-void setup() {
+void setup()
+{
   strip.begin();
-  strip.setBrightness(20);  
+  strip.setBrightness(20);
 }
 
-void loop() {
-  switch(mode) {
-    case GRADIENT:
-      for (int j = 0; j < 255; j += 2) {
-        for (int i = 0; i < LEDS_COUNT; i++) {
-          strip.setLedColorData(i, strip.Wheel((i * 256 / LEDS_COUNT + j) & 255));
-        }
-        strip.show();
-        delay(10);
-      }
-      delay(2000);  // 2 seconds delay
-      mode = JUMP;
-      break;
-    case JUMP:
-      for (int i = 0; i < LEDS_COUNT; i++) {
-        strip.setLedColorData(i, strip.Wheel(random(0, 255)));
+void loop()
+{
+  switch (mode)
+  {
+  case GRADIENT:
+    for (int j = 0; j < 255; j += 2)
+    {
+      for (int i = 0; i < LEDS_COUNT; i++)
+      {
+        strip.setLedColorData(i, strip.Wheel((i * 256 / LEDS_COUNT + j) & 255));
       }
       strip.show();
-      delay(2000);  // 2 seconds delay
-      mode = FLASH;
-      break;
-    case FLASH:
-      for (int i = 0; i < LEDS_COUNT; i++) {
-        strip.setLedColorData(i, strip.Wheel(random(0, 255)));
+      delay(10);
+    }
+    delay(2000); // 2 seconds delay
+    mode = JUMP;
+    break;
+  case JUMP:
+    for (int i = 0; i < LEDS_COUNT; i++)
+    {
+      strip.setLedColorData(i, strip.Wheel(random(0, 255)));
+    }
+    strip.show();
+    delay(2000); // 2 seconds delay
+    mode = FLASH;
+    break;
+  case FLASH:
+    for (int i = 0; i < LEDS_COUNT; i++)
+    {
+      strip.setLedColorData(i, strip.Wheel(random(0, 255)));
+    }
+    strip.show();
+    delay(100);
+    for (int i = 0; i < LEDS_COUNT; i++)
+    {
+      strip.setLedColorData(i, 0);
+    }
+    strip.show();
+    delay(100);
+    delay(2000); // 2 seconds delay
+    mode = RAINBOW;
+    break;
+  case RAINBOW:
+    for (int j = 0; j < 256; j++)
+    {
+      for (int i = 0; i < LEDS_COUNT; i++)
+      {
+        strip.setLedColorData(i, strip.Wheel((i + j) & 255));
       }
       strip.show();
-      delay(100);
-      for (int i = 0; i < LEDS_COUNT; i++) {
-        strip.setLedColorData(i, 0);
+      delay(10);
+    }
+    delay(2000); // 2 seconds delay
+    mode = BREATH;
+    break;
+  case BREATH:
+    for (int j = 0; j < 255; j++)
+    {
+      for (int i = 0; i < LEDS_COUNT; i++)
+      {
+        strip.setLedColorData(i, strip.Wheel(j));
       }
       strip.show();
-      delay(100);
-      delay(2000);  // 2 seconds delay
-      mode = RAINBOW;
-      break;
-    case RAINBOW:
-      for (int j = 0; j < 256; j++) {
-        for (int i = 0; i < LEDS_COUNT; i++) {
-          strip.setLedColorData(i, strip.Wheel((i + j) & 255));
-        }
-        strip.show();
-        delay(10);
+      delay(10);
+    }
+    for (int j = 255; j > 0; j--)
+    {
+      for (int i = 0; i < LEDS_COUNT; i++)
+      {
+        strip.setLedColorData(i, strip.Wheel(j));
       }
-      delay(2000);  // 2 seconds delay
-      mode = BREATH;
-      break;
-    case BREATH:
-      for (int j = 0; j < 255; j++) {
-        for (int i = 0; i < LEDS_COUNT; i++) {
-          strip.setLedColorData(i, strip.Wheel(j));
-        }
-        strip.show();
-        delay(10);
-      }
-      for (int j = 255; j > 0; j--) {
-        for (int i = 0; i < LEDS_COUNT; i++) {
-          strip.setLedColorData(i, strip.Wheel(j));
-        }
-        strip.show();
-        delay(10);
-      }
-      delay(2000);  // 2 seconds delay
-      mode = GRADIENT;
-      break;
+      strip.show();
+      delay(10);
+    }
+    delay(2000); // 2 seconds delay
+    mode = GRADIENT;
+    break;
   }
 }
 
-//烟雾浓度报警器
+// 烟雾浓度报警器
 #include <MQUnifiedsensor.h>
 
-//Definitions
+// Definitions
 #define placa "Arduino UNO"
 #define Voltage_Resolution 5
-#define pin 13 //Analog input 4 of your arduino
-#define type "MQ2" //MQ2
+#define pin 13                // Analog input 4 of your arduino
+#define type "MQ2"            // MQ2
 #define ADC_Bit_Resolution 10 // For arduino UNO/MEGA/NANO
-#define RatioMQ2CleanAir 4.4  //RS / R0 = 4.4 ppm 
-//#define calibration_button 13 //Pin to calibrate your sensor
+#define RatioMQ2CleanAir 4.4  // RS / R0 = 4.4 ppm
+// #define calibration_button 13 //Pin to calibrate your sensor
 
-//Declare Sensor
+// Declare Sensor
 MQUnifiedsensor MQ2(placa, Voltage_Resolution, ADC_Bit_Resolution, pin, type);
 #define alarmPin 18
-void setup() {
-  //Init serial port
+void setup()
+{
+  // Init serial port
   Serial.begin(115200);
-  //Set math model to calculate the PPM concentration and the value of constants
+  // Set math model to calculate the PPM concentration and the value of constants
   MQ2.setRegressionMethod(1); //_PPM =  a*ratio^b
-  MQ2.setA(30000000); MQ2.setB(-8.308); // Configure the equation to to calculate CH4 concentration
+  MQ2.setA(30000000);
+  MQ2.setB(-8.308); // Configure the equation to to calculate CH4 concentration
 
-  MQ2.init(); 
- 
+  MQ2.init();
+
   Serial.print("Calibrating please wait.");
   float calcR0 = 0;
-  for(int i = 1; i<=10; i ++)
+  for (int i = 1; i <= 10; i++)
   {
     MQ2.update(); // Update data, the arduino will read the voltage from the analog pin
     calcR0 += MQ2.calibrate(RatioMQ2CleanAir);
     Serial.print(".");
   }
-  MQ2.setR0(calcR0/10);
+  MQ2.setR0(calcR0 / 10);
   Serial.println("  done!.");
-  
-  if(isinf(calcR0)) {Serial.println("Warning: Conection issue, R0 is infinite (Open circuit detected) please check your wiring and supply"); while(1);}
-  if(calcR0 == 0){Serial.println("Warning: Conection issue found, R0 is zero (Analog pin shorts to ground) please check your wiring and supply"); while(1);}
-  /*****************************  MQ CAlibration ********************************************/ 
+
+  if (isinf(calcR0))
+  {
+    Serial.println("Warning: Conection issue, R0 is infinite (Open circuit detected) please check your wiring and supply");
+    while (1)
+      ;
+  }
+  if (calcR0 == 0)
+  {
+    Serial.println("Warning: Conection issue found, R0 is zero (Analog pin shorts to ground) please check your wiring and supply");
+    while (1)
+      ;
+  }
+  /*****************************  MQ CAlibration ********************************************/
   MQ2.serialDebug(true);
   pinMode(alarmPin, OUTPUT);
-  digitalWrite(alarmPin,HIGH);
+  digitalWrite(alarmPin, HIGH);
 }
 
-  void loop() {
+void loop()
+{
 
   MQ2.update();
   float smokePPM = MQ2.readSensor(); // Sensor will read PPM concentration using the model, a and b values set previously or from the setup
-  if(smokePPM > 50  ) {Serial.println("Warning: High concentrations of smoke detected");
+  if (smokePPM > 50)
+  {
+    Serial.println("Warning: High concentrations of smoke detected");
     digitalWrite(alarmPin, LOW); // 触发警报
- } else {
+  }
+  else
+  {
     Serial.println("Smoke concentration normal");
     digitalWrite(alarmPin, HIGH); // 关闭警报
- }
- Serial.print("Smoke Concentration: "); 
- Serial.print(smokePPM); 
- Serial.println(" ppm");
+  }
+  Serial.print("Smoke Concentration: ");
+  Serial.print(smokePPM);
+  Serial.println(" ppm");
   MQ2.serialDebug(); // Will print the table on the serial port
-  delay(4000);  
+  delay(4000);
 }
 
-
-
-//人体感应自动开灯
+// 人体感应自动开灯
 #include <Arduino.h>
 
 // 定义红外人体感应模块和LED灯的引脚
 const int sensorPin = 22; // 人体感应模块的输出引脚连接到GPIO22
-const int ledPin = 13;     // LED灯连接到GPIO13
+const int ledPin = 13;    // LED灯连接到GPIO13
 
-void setup() {
+void setup()
+{
   pinMode(sensorPin, INPUT); // 设置人体感应模块引脚为输入
   pinMode(ledPin, OUTPUT);   // 设置LED灯引脚为输出
 }
 
-void loop() {
-  if (digitalRead(sensorPin) == HIGH) {
+void loop()
+{
+  if (digitalRead(sensorPin) == HIGH)
+  {
     digitalWrite(ledPin, HIGH); // 如果检测到人体，点亮LED灯
-  } else {
-    digitalWrite(ledPin, LOW);  // 否则，熄灭LED灯
   }
-} 
+  else
+  {
+    digitalWrite(ledPin, LOW); // 否则，熄灭LED灯
+  }
+}
 
+// 获取温湿度信息
+#include <Adafruit_Sensor.h>
+#include <DHT.h>
+#include <DHT_U.h>
+
+#define DHTPIN 14
+
+#define DHTTYPE DHT11 // DHT 11
+
+DHT_Unified dht(DHTPIN, DHTTYPE);
+
+uint32_t delayMS;
+
+void setup()
+{
+  Serial.begin(9600);
+  // Initialize device.
+  dht.begin();
+  Serial.println(F("DHTxx Unified Sensor Example"));
+  // Print temperature sensor details.
+  sensor_t sensor;
+  dht.temperature().getSensor(&sensor);
+  Serial.println(F("------------------------------------"));
+  Serial.println(F("Temperature Sensor"));
+  Serial.print(F("Sensor Type: "));
+  Serial.println(sensor.name);
+  Serial.print(F("Driver Ver:  "));
+  Serial.println(sensor.version);
+  Serial.print(F("Unique ID:   "));
+  Serial.println(sensor.sensor_id);
+  Serial.print(F("Max Value:   "));
+  Serial.print(sensor.max_value);
+  Serial.println(F("°C"));
+  Serial.print(F("Min Value:   "));
+  Serial.print(sensor.min_value);
+  Serial.println(F("°C"));
+  Serial.print(F("Resolution:  "));
+  Serial.print(sensor.resolution);
+  Serial.println(F("°C"));
+  Serial.println(F("------------------------------------"));
+  // Print humidity sensor details.
+  dht.humidity().getSensor(&sensor);
+  Serial.println(F("Humidity Sensor"));
+  Serial.print(F("Sensor Type: "));
+  Serial.println(sensor.name);
+  Serial.print(F("Driver Ver:  "));
+  Serial.println(sensor.version);
+  Serial.print(F("Unique ID:   "));
+  Serial.println(sensor.sensor_id);
+  Serial.print(F("Max Value:   "));
+  Serial.print(sensor.max_value);
+  Serial.println(F("%"));
+  Serial.print(F("Min Value:   "));
+  Serial.print(sensor.min_value);
+  Serial.println(F("%"));
+  Serial.print(F("Resolution:  "));
+  Serial.print(sensor.resolution);
+  Serial.println(F("%"));
+  Serial.println(F("------------------------------------"));
+
+  delayMS = sensor.min_delay / 1000;
+}
+
+void loop()
+{
+  // Delay between measurements.
+  delay(delayMS);
+  // Get temperature event and print its value.
+  sensors_event_t event;
+  dht.temperature().getEvent(&event);
+  if (isnan(event.temperature))
+  {
+    Serial.println(F("Error reading temperature!"));
+  }
+  else
+  {
+    Serial.print(F("Temperature: "));
+    Serial.print(event.temperature);
+    Serial.println(F("°C"));
+  }
+  // Get humidity event and print its value.
+  dht.humidity().getEvent(&event);
+  if (isnan(event.relative_humidity))
+  {
+    Serial.println(F("Error reading humidity!"));
+  }
+  else
+  {
+    Serial.print(F("Humidity: "));
+    Serial.print(event.relative_humidity);
+    Serial.println(F("%"));
+  }
+}
