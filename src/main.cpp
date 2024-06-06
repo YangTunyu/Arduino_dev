@@ -325,7 +325,7 @@ delay(10);//延时0.01 秒
 
 
 //zby
-// LED逐渐变亮
+// LED逐渐变亮过程
 for (int i = 0; i <= 255; i += fadeAmount) {
 analogWrite(ledPin, i);
 delay(100); // 可以调整呼吸灯速度
