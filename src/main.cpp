@@ -860,3 +860,64 @@ void loop() {
   }
   delay(1000); // 延迟1秒钟
 }
+
+//实现窗帘一键开关
+#include <Arduino.h>
+
+#define MOTOR_INA 23
+#define MOTOR_INB 22
+#define SWITCH_PIN 13
+#define GREEN_LED 27
+#define RED_LED 14
+
+enum MotorState {STOP, REVERSE, FORWARD};
+MotorState motorState = STOP;
+
+bool lastSwitchState = HIGH; // 按钮的上一个状态，初始为未按下
+unsigned long lastDebounceTime = 0;
+unsigned long debounceDelay = 50;
+
+void setup() {
+  pinMode(MOTOR_INA, OUTPUT);
+  pinMode(MOTOR_INB, OUTPUT);
+  pinMode(SWITCH_PIN, INPUT_PULLUP); // 使用内部上拉电阻
+  pinMode(GREEN_LED, OUTPUT);
+  pinMode(RED_LED, OUTPUT);
+}
+
+void loop() {
+  bool switchState = digitalRead(SWITCH_PIN);
+
+  if (switchState != lastSwitchState) {
+    lastDebounceTime = millis();
+  }
+
+  if ((millis() - lastDebounceTime) > debounceDelay) {
+    if (switchState == LOW) {
+      motorState = static_cast<MotorState>((motorState + 1) % 3);
+    }
+  }
+
+  lastSwitchState = switchState;
+
+  switch (motorState) {
+    case STOP:
+      digitalWrite(MOTOR_INA, LOW);
+      digitalWrite(MOTOR_INB, LOW);
+      digitalWrite(GREEN_LED, LOW);
+      digitalWrite(RED_LED, LOW);
+      break;
+    case REVERSE:
+      digitalWrite(MOTOR_INA, LOW);
+      digitalWrite(MOTOR_INB, HIGH);
+      digitalWrite(GREEN_LED, LOW);
+      digitalWrite(RED_LED, HIGH);
+      break;
+    case FORWARD:
+      digitalWrite(MOTOR_INA, HIGH);
+      digitalWrite(MOTOR_INB, LOW);
+      digitalWrite(GREEN_LED, HIGH);
+      digitalWrite(RED_LED, LOW);
+      break;
+  }
+}
