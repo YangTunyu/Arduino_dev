@@ -921,3 +921,29 @@ void loop() {
       break;
   }
 }
+
+
+// 使ESP32板载LED灯实现呼吸灯效果
+#include <Arduino.h>
+
+int ledPin = 2; // 定义LED连接的引脚
+int brightness = 0; // LED亮度变量
+int fadeAmount = 5; // 亮度变化步长
+
+void setup() {
+pinMode(ledPin, OUTPUT); // 设置LED引脚为输出模式
+}
+
+void loop() {
+// LED逐渐变亮
+for (int i = 0; i <= 255; i += fadeAmount) {
+analogWrite(ledPin, i);
+delay(100); // 可以调整呼吸灯速度
+}
+
+// LED逐渐变暗
+for (int i = 255; i >= 0; i -= fadeAmount) {
+analogWrite(ledPin, i);
+delay(100); // 可以调整呼吸灯速度
+ }
+}
