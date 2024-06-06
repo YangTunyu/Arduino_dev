@@ -767,7 +767,7 @@ void loop()
 {
   // 发送一串数据到 ESP32 的串口2
   byte sendData[] = {0xF1, 0xF2, 0xF3, 0xF4, 0xFF, 0xF1};
-  Serial.println("88");
+
   Serial2.write(sendData, sizeof(sendData));
   // 输出发送的数据
   Serial.print("Sent data:111 ");
@@ -819,8 +819,7 @@ void loop()
   // do nothing
 }
 
-
-//可燃气体泄露告警
+// 可燃气体泄露告警
 #include <Arduino.h>
 #include <Wire.h>
 #include <BH1750.h>
@@ -829,7 +828,8 @@ BH1750 lightSensor;
 const int ledPin = 16; // LED的控制引脚连接到GPIO 16
 const int pirPin = 14; // HC-SR312微型人体感应模块的信号引脚连接到GPIO 14
 
-void setup() {
+void setup()
+{
   Serial.begin(9600);
   pinMode(ledPin, OUTPUT);
   pinMode(pirPin, INPUT);
@@ -838,7 +838,8 @@ void setup() {
   lightSensor.begin();
 }
 
-void loop() {
+void loop()
+{
   // 读取光线强度
   uint16_t lux = lightSensor.readLightLevel();
   Serial.print("Light level (lux): ");
@@ -848,20 +849,22 @@ void loop() {
   int motionDetected = digitalRead(pirPin);
   Serial.print("People Condition: ");
   Serial.println(motionDetected);
-  
 
   // 当光线暗且有人时，点亮LED
-  if (lux < 500 && motionDetected == HIGH) {
+  if (lux < 500 && motionDetected == HIGH)
+  {
     digitalWrite(ledPin, HIGH); // 点亮LED
-    Serial.print("Light Condition: HIGH "); 
-  } else {
+    Serial.print("Light Condition: HIGH ");
+  }
+  else
+  {
     digitalWrite(ledPin, LOW); // 关闭LED
     Serial.print("Light Condition: LOW ");
   }
   delay(1000); // 延迟1秒钟
 }
 
-//实现窗帘一键开关
+// 实现窗帘一键开关
 #include <Arduino.h>
 
 #define MOTOR_INA 23
@@ -870,14 +873,20 @@ void loop() {
 #define GREEN_LED 27
 #define RED_LED 14
 
-enum MotorState {STOP, REVERSE, FORWARD};
+enum MotorState
+{
+  STOP,
+  REVERSE,
+  FORWARD
+};
 MotorState motorState = STOP;
 
 bool lastSwitchState = HIGH; // 按钮的上一个状态，初始为未按下
 unsigned long lastDebounceTime = 0;
 unsigned long debounceDelay = 50;
 
-void setup() {
+void setup()
+{
   pinMode(MOTOR_INA, OUTPUT);
   pinMode(MOTOR_INB, OUTPUT);
   pinMode(SWITCH_PIN, INPUT_PULLUP); // 使用内部上拉电阻
@@ -885,65 +894,73 @@ void setup() {
   pinMode(RED_LED, OUTPUT);
 }
 
-void loop() {
+void loop()
+{
   bool switchState = digitalRead(SWITCH_PIN);
 
-  if (switchState != lastSwitchState) {
+  if (switchState != lastSwitchState)
+  {
     lastDebounceTime = millis();
   }
 
-  if ((millis() - lastDebounceTime) > debounceDelay) {
-    if (switchState == LOW) {
+  if ((millis() - lastDebounceTime) > debounceDelay)
+  {
+    if (switchState == LOW)
+    {
       motorState = static_cast<MotorState>((motorState + 1) % 3);
     }
   }
 
   lastSwitchState = switchState;
 
-  switch (motorState) {
-    case STOP:
-      digitalWrite(MOTOR_INA, LOW);
-      digitalWrite(MOTOR_INB, LOW);
-      digitalWrite(GREEN_LED, LOW);
-      digitalWrite(RED_LED, LOW);
-      break;
-    case REVERSE:
-      digitalWrite(MOTOR_INA, LOW);
-      digitalWrite(MOTOR_INB, HIGH);
-      digitalWrite(GREEN_LED, LOW);
-      digitalWrite(RED_LED, HIGH);
-      break;
-    case FORWARD:
-      digitalWrite(MOTOR_INA, HIGH);
-      digitalWrite(MOTOR_INB, LOW);
-      digitalWrite(GREEN_LED, HIGH);
-      digitalWrite(RED_LED, LOW);
-      break;
+  switch (motorState)
+  {
+  case STOP:
+    digitalWrite(MOTOR_INA, LOW);
+    digitalWrite(MOTOR_INB, LOW);
+    digitalWrite(GREEN_LED, LOW);
+    digitalWrite(RED_LED, LOW);
+    break;
+  case REVERSE:
+    digitalWrite(MOTOR_INA, LOW);
+    digitalWrite(MOTOR_INB, HIGH);
+    digitalWrite(GREEN_LED, LOW);
+    digitalWrite(RED_LED, HIGH);
+    break;
+  case FORWARD:
+    digitalWrite(MOTOR_INA, HIGH);
+    digitalWrite(MOTOR_INB, LOW);
+    digitalWrite(GREEN_LED, HIGH);
+    digitalWrite(RED_LED, LOW);
+    break;
   }
 }
-
 
 // 使ESP32板载LED灯实现呼吸灯效果
 #include <Arduino.h>
 
-int ledPin = 2; // 定义LED连接的引脚
+int ledPin = 2;     // 定义LED连接的引脚
 int brightness = 0; // LED亮度变量
 int fadeAmount = 5; // 亮度变化步长
 
-void setup() {
-pinMode(ledPin, OUTPUT); // 设置LED引脚为输出模式
+void setup()
+{
+  pinMode(ledPin, OUTPUT); // 设置LED引脚为输出模式
 }
 
-void loop() {
-// LED逐渐变亮
-for (int i = 0; i <= 255; i += fadeAmount) {
-analogWrite(ledPin, i);
-delay(100); // 可以调整呼吸灯速度
-}
+void loop()
+{
+  // LED逐渐变亮
+  for (int i = 0; i <= 255; i += fadeAmount)
+  {
+    analogWrite(ledPin, i);
+    delay(100); // 可以调整呼吸灯速度
+  }
 
-// LED逐渐变暗
-for (int i = 255; i >= 0; i -= fadeAmount) {
-analogWrite(ledPin, i);
-delay(100); // 可以调整呼吸灯速度
- }
+  // LED逐渐变暗
+  for (int i = 255; i >= 0; i -= fadeAmount)
+  {
+    analogWrite(ledPin, i);
+    delay(100); // 可以调整呼吸灯速度
+  }
 }
