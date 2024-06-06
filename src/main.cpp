@@ -558,49 +558,175 @@ void loop()
 // 烟雾浓度数据获取
 #include <MQUnifiedsensor.h>
 
-//Definitions
+// Definitions
 #define placa "Arduino UNO"
 #define Voltage_Resolution 5
-#define pin 13 //Analog input 4 of your arduino
-#define type "MQ-2" //MQ4
+#define pin 13                // Analog input 4 of your arduino
+#define type "MQ-2"           // MQ4
 #define ADC_Bit_Resolution 10 // For arduino UNO/MEGA/NANO
-#define RatioMQ4CleanAir 4.4  //RS / R0 = 4.4 ppm 
-//#define calibration_button 13 //Pin to calibrate your sensor
+#define RatioMQ4CleanAir 4.4  // RS / R0 = 4.4 ppm
+// #define calibration_button 13 //Pin to calibrate your sensor
 
-//Declare Sensor
+// Declare Sensor
 MQUnifiedsensor MQ2(placa, Voltage_Resolution, ADC_Bit_Resolution, pin, type);
 
-void setup() {
-  //Init serial port
+void setup()
+{
+  // Init serial port
   Serial.begin(115200);
-  //Set math model to calculate the PPM concentration and the value of constants
+  // Set math model to calculate the PPM concentration and the value of constants
   MQ2.setRegressionMethod(1); //_PPM =  a*ratio^b
-  MQ2.setA(30000000); MQ2.setB(-8.308); // Configure the equation to to calculate CH4 concentration
+  MQ2.setA(30000000);
+  MQ2.setB(-8.308); // Configure the equation to to calculate CH4 concentration
 
-  MQ2.init(); 
+  MQ2.init();
 
   Serial.print("Calibrating please wait.");
   float calcR0 = 0;
-  for(int i = 1; i<=10; i ++)
+  for (int i = 1; i <= 10; i++)
   {
     MQ2.update(); // Update data, the arduino will read the voltage from the analog pin
     calcR0 += MQ2.calibrate(RatioMQ4CleanAir);
     Serial.print(".");
   }
-  MQ2.setR0(calcR0/10);
+  MQ2.setR0(calcR0 / 10);
   Serial.println("  done!.");
-  
-  if(isinf(calcR0)) {Serial.println("Warning: Conection issue, R0 is infinite (Open circuit detected) please check your wiring and supply"); while(1);}
-  if(calcR0 == 0){Serial.println("Warning: Conection issue found, R0 is zero (Analog pin shorts to ground) please check your wiring and supply"); while(1);}
-  /*****************************  MQ CAlibration ********************************************/ 
+
+  if (isinf(calcR0))
+  {
+    Serial.println("Warning: Conection issue, R0 is infinite (Open circuit detected) please check your wiring and supply");
+    while (1)
+      ;
+  }
+  if (calcR0 == 0)
+  {
+    Serial.println("Warning: Conection issue found, R0 is zero (Analog pin shorts to ground) please check your wiring and supply");
+    while (1)
+      ;
+  }
+  /*****************************  MQ CAlibration ********************************************/
   MQ2.serialDebug(true);
 }
 
-  void loop() {
+void loop()
+{
 
   MQ2.update();
   float smokePPM = MQ2.readSensor(); // Sensor will read PPM concentration using the model, a and b values set previously or from the setup
-  if(smokePPM > 1000) {Serial.println("Warning: High concentrations of smoke detected");}
+  if (smokePPM > 1000)
+  {
+    Serial.println("Warning: High concentrations of smoke detected");
+  }
   MQ2.serialDebug(); // Will print the table on the serial port
-  delay(400);  
+  delay(400);
+}
+
+// 显示温湿度信息
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <Adafruit_Sensor.h>
+#include <DHT.h>
+#include <DHT_U.h>
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET -1
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+
+#define DHTPIN 14
+#define DHTTYPE DHT11 // DHT 11
+DHT_Unified dht(DHTPIN, DHTTYPE);
+uint32_t delayMS;
+
+void setup()
+{
+  Serial.begin(9600);
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
+  {
+    Serial.println(F("SSD1306 allocation failed"));
+    for (;;)
+      ;
+  }
+  display.display();
+  delay(2000);
+  display.clearDisplay();
+
+  dht.begin();
+  // Initialize device.
+  Serial.println(F("DHTxx Unified Sensor Example"));
+  sensor_t sensor;
+  dht.temperature().getSensor(&sensor);
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  display.println(F("Temperature Sensor"));
+  display.println(F("------------------------------------"));
+  display.print(F("Sensor Type: "));
+  display.println(sensor.name);
+  display.print(F("Driver Ver:  "));
+  display.println(sensor.version);
+  display.print(F("Unique ID:   "));
+  display.println(sensor.sensor_id);
+  display.print(F("Max Value:   "));
+  display.print(sensor.max_value);
+  display.println(F("°C"));
+  display.print(F("Min Value:   "));
+  display.print(sensor.min_value);
+  display.println(F("°C"));
+  display.print(F("Resolution:  "));
+  display.print(sensor.resolution);
+  display.println(F("°C"));
+  display.println(F("------------------------------------"));
+  dht.humidity().getSensor(&sensor);
+  display.println(F("Humidity Sensor"));
+  display.println(F("Sensor Type: "));
+  display.println(sensor.name);
+  display.print(F("Driver Ver:  "));
+  display.println(sensor.version);
+  display.print(F("Unique ID:   "));
+  display.println(sensor.sensor_id);
+  display.print(F("Max Value:   "));
+  display.print(sensor.max_value);
+  display.println(F("%"));
+  display.print(F("Min Value:   "));
+  display.print(sensor.min_value);
+  display.println(F("%"));
+  display.print(F("Resolution:  "));
+  display.print(sensor.resolution);
+  display.println(F("%"));
+  display.println(F("------------------------------------"));
+  delayMS = sensor.min_delay / 1000;
+  display.display();
+}
+
+void loop()
+{
+  delay(delayMS);
+  sensors_event_t event;
+  dht.temperature().getEvent(&event);
+  if (isnan(event.temperature))
+  {
+    display.println(F("Error reading temperature!"));
+  }
+  else
+  {
+    display.setCursor(0, 60);
+    display.print(F("Temperature: "));
+    display.print(event.temperature);
+    display.println(F("°C"));
+  }
+  dht.humidity().getEvent(&event);
+  if (isnan(event.relative_humidity))
+  {
+    display.println(F("Error reading humidity!"));
+  }
+  else
+  {
+    display.setCursor(0, 50);
+    display.print(F("Humidity: "));
+    display.print(event.relative_humidity);
+    display.println(F("%"));
+  }
+  display.display();
 }
