@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-const int buttonPin = 2;            // 开关连接到GPIO2 (D4)
+const int buttonPin = 0;            // 开关连接到GPIO2 (D4)
 const int ledPin = 13;              // LED连接到GPIO13 (D7)
 const int potentiometerPin = 36;     // 电位器连接到GPIO36 (A0)
 
