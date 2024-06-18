@@ -1,48 +1,37 @@
 //pah上升以及暂停
-#include <Stepper.h>
-#include <Arduino.h>
+#include "Stepper_28BYJ_48.h"
 
-const int stepsPerRevolution = 20000;
-const int startPin = 13;
-const int stopPin = 33;
-bool isStartPressed = false;
-bool isStopPressed = false;
-bool isMotorRunning = false;
+int startPin = 13; // 连接到启动按钮的引脚
+int stopPin = 23; // 连接到停止按钮的引脚
+int reversePin = 22; // 连接到反向旋转按钮的引脚
 
-Stepper myStepper(stepsPerRevolution, 14, 27, 26, 25);
+Stepper_28BYJ_48 stepper(14, 27, 26, 25);
+
+bool isRunning = false; // 用于跟踪电机的状态
+int direction = 1; // 用于控制电机的旋转方向
 
 void setup() {
   pinMode(startPin, INPUT_PULLUP);
   pinMode(stopPin, INPUT_PULLUP);
-  Serial.begin(9600);
+  pinMode(reversePin, INPUT_PULLUP);
 }
 
 void loop() {
-  int sensorReading = analogRead(A0);
-  int motorSpeed = map(sensorReading, 0, 1023, 0, 100);
-
-  bool currentStartState = digitalRead(startPin) == LOW;
-  bool currentStopState = digitalRead(stopPin) == LOW;
-
-  if (currentStartState != isStartPressed) {
-    isStartPressed = currentStartState;
-    if (isStartPressed && !isMotorRunning) {
-      // 启动按钮被按下,且电机未运行
-      myStepper.setSpeed(motorSpeed);
-      isMotorRunning = true;
-    }
+  if (digitalRead(startPin) == LOW) {
+    isRunning = true; // 启动电机
+    direction = 1; // 设置旋转方向为正向
   }
 
-  if (currentStopState != isStopPressed) {
-    isStopPressed = currentStopState;
-    if (isStopPressed && isMotorRunning) {
-      // 停止按钮被按下,且电机正在运行
-      myStepper.setSpeed(0);
-      isMotorRunning = false;
-    }
+  if (digitalRead(reversePin) == LOW) {
+    isRunning = true; // 启动电机
+    direction = -1; // 设置旋转方向为反向
   }
 
-  if (isMotorRunning) {
-    myStepper.step(stepsPerRevolution / 100);
+  if (digitalRead(stopPin) == LOW) {
+    isRunning = false; // 停止电机
+  }
+
+  if (isRunning) {
+    stepper.step(direction); // 如果电机正在运行，则按照设置的方向旋转
   }
 }
