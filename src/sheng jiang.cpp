@@ -1,4 +1,4 @@
-//pah上升以及暂停
+//pah上升、下降以及暂停
 #include "Stepper_28BYJ_48.h"
 
 int startPin = 13; // 连接到启动按钮的引脚
