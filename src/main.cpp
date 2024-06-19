@@ -24,7 +24,9 @@ const int buttonPin1 = 5;         // 开关连接到GPIO2 (D4)
 const int ledPin = 13;           // LED连接到GPIO13 (D7)
 const int potentiometerPin = 36; // 电位器连接到GPIO36 (A0)
 
-
+const int buttonPin2 = 0; // 按钮连接到 GPIO0 
+const int fanPinA = 2; // 风扇的A引脚连接到 GPIO4 
+const int fanPinB = 4; // 风扇的B引脚连接到 GPIO2 
 
 
 
@@ -57,7 +59,11 @@ long lastDebounceTime = 0;  // 上一次按下或释放开关的时间
 long debounceDelay = 50;    // 防抖延迟时间
 int brightness = 0;         // LED亮度
 
-
+//pzy风扇
+int buttonState2 = 0;
+bool deviceState = false; // 控制LED和风扇的状态
+unsigned long lastButtonPressTime2 = 0;
+const unsigned long deviceAutoOffInterval2 = 15000; // 设备自动关闭的时间间隔，15秒
 
 
 
@@ -83,6 +89,13 @@ void setup() {
   pinMode(buttonPin1, INPUT_PULLUP); // 设置开关引脚为输入，带上拉电阻
   pinMode(ledPin, OUTPUT);          // 设置LED引脚为输出
   Serial.begin(9600);               // 初始化串口通信
+
+
+  //pzy风扇
+  pinMode(buttonPin2, INPUT_PULLUP);
+  pinMode(fanPinA, OUTPUT);
+  pinMode(fanPinB, OUTPUT);
+  Serial.begin(9600);
 }
 
 
@@ -168,5 +181,32 @@ void loop() {
   }
 
   delay(10); // 稍作延迟以提高稳定性
+
+
+  //pzy 风干功能
+  buttonState2 = digitalRead(buttonPin2);
+
+if (buttonState2 == LOW) {
+ deviceState = !deviceState;
+digitalWrite(fanPinA, deviceState);
+digitalWrite(fanPinB, LOW);
+Serial.print("按钮被按下。LED和风扇现在都");
+ Serial.println(deviceState ? "开启" : "关闭");
+
+if (deviceState) {
+ lastButtonPressTime2 = millis(); // 记录LED和风扇开启的时间
+ }
+
+ delay(200);
+  }
+
+// 检查是否到了自动关闭LED和风扇的时间
+if (deviceState && (millis() - lastButtonPressTime2 >= deviceAutoOffInterval2)) {
+ deviceState = false;
+ //digitalWrite(ledPin, LOW);
+ digitalWrite(fanPinA, LOW);
+ digitalWrite(fanPinB, LOW);
+ Serial.println("自动关闭LED和风扇。");
+ }
 
 }
