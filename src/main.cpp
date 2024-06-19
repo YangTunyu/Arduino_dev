@@ -11,15 +11,20 @@ int stopPin = 23;    // 连接到停止按钮的引脚
 int reversePin = 22; // 连接到反向旋转按钮的引脚
 
 const int buttonPin1 = 5;        // 开关连接到GPIO2 (D4)
-const int ledPin = 13;           // LED连接到GPIO13 (D7)
+const int ledPin = 33;           // LED连接到GPIO33 (D7)
 const int potentiometerPin = 36; // 电位器连接到GPIO36 (A0)
 
 const int buttonPin2 = 0; // 按钮连接到 GPIO0
-const int fanPinA = 2;    // 风扇的A引脚连接到 GPIO4
-const int fanPinB = 4;    // 风扇的B引脚连接到 GPIO2
+const int fanPinA = 2;    // 风扇的A引脚连接到 GPIO2
+const int fanPinB = 4;    // 风扇的B引脚连接到 GPIO4
 
 int ledpin2 = 17;          // 连接到LED引脚
 const int buttonPin3 = 16; // 连接到开关紫外线按钮引脚
+
+const int buttonPin4 = 25; // 按钮连接到 GPIO25 (D4)
+const int ledPin4 = 26; // LED连接到 GPIO26 (D7)
+const int fanPinA4 = 27; // 风扇的A引脚连接到 GPIO27 (D2)
+const int fanPinB4 = 14; // 风扇的B引脚连接到 GPIO14 (D1)
 
 // 其余部分
 // pah
@@ -54,6 +59,12 @@ int buttonState3 = 0;
 unsigned long lastButtonPressTime = 0;
 const unsigned long ledAutoOffInterval = 1000; // 15 seconds in milliseconds
 
+//pzy烘干
+int buttonState4 = 0;
+bool deviceState4 = false; // 控制LED和风扇的状态
+unsigned long lastButtonPressTime4 = 0;
+const unsigned long deviceAutoOffInterval4 = 15000; // 设备自动关闭的时间间隔，15秒
+
 // setup
 // pah
 void setup()
@@ -78,6 +89,13 @@ void setup()
   pinMode(buttonPin3, INPUT_PULLUP); // 设置开关引脚为输入，带上拉电阻
   pinMode(ledpin2, OUTPUT);          // 设置LED引脚为输出
   Serial.begin(9600);
+
+  //pzy烘干
+  pinMode(buttonPin4, INPUT_PULLUP);
+pinMode(ledPin4, OUTPUT);
+pinMode(fanPinA4, OUTPUT);
+pinMode(fanPinB4, OUTPUT);
+Serial.begin(9600);
 }
 
 // loop
@@ -208,4 +226,32 @@ void loop()
     digitalWrite(fanPinB, LOW);
     Serial.println("自动关闭LED和风扇。");
   }
+
+//pzy烘干功能
+buttonState4 = digitalRead(buttonPin4);
+
+if (buttonState4 == LOW) {
+ deviceState4 = !deviceState4;
+digitalWrite(ledPin4, deviceState4);
+digitalWrite(fanPinA4, deviceState4);
+ digitalWrite(fanPinB4, LOW);
+Serial.print("按钮被按下。LED和风扇现在都");
+ Serial.println(deviceState4 ? "开启" : "关闭");
+
+if (deviceState4) {
+ lastButtonPressTime4 = millis(); // 记录LED和风扇开启的时间
+ }
+
+ delay(200);
+  }
+
+// 检查是否到了自动关闭LED和风扇的时间
+if (deviceState4 && (millis() - lastButtonPressTime4 >= deviceAutoOffInterval4)) {
+ deviceState4 = false;
+ digitalWrite(ledPin4, LOW);
+ digitalWrite(fanPinA4, LOW);
+ digitalWrite(fanPinB4, LOW);
+ Serial.println("自动关闭LED和风扇。");
+ }
+
 }
