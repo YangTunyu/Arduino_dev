@@ -57,7 +57,7 @@ const unsigned long deviceAutoOffInterval2 = 15000; // 设备自动关闭的时�
 bool ledState2 = false;
 int buttonState3 = 0;
 unsigned long lastButtonPressTime = 0;
-const unsigned long ledAutoOffInterval = 1000; // 15 seconds in milliseconds
+const unsigned long ledAutoOffInterval = 15000; // 15 seconds in milliseconds
 
 //pzy烘干
 int buttonState4 = 0;
@@ -100,158 +100,166 @@ Serial.begin(9600);
 
 // loop
 
+// 全局变量和设置不变
+
 void loop()
 {
-  // pah
-  if (digitalRead(startPin) == LOW)
+  // 电机控制
+  static unsigned long lastMotorCheck = 0;
+  int stepControl = 10; // 步进控制变量，可以根据需要调整
+  if (millis() - lastMotorCheck >= 10) // 每10毫秒检查一次电机状态
   {
-    isRunning = true; // 启动电机
-    direction = 1;    // 设置旋转方向为正向
-  }
-
-  if (digitalRead(reversePin) == LOW)
-  {
-    isRunning = true; // 启动电机
-    direction = -1;   // 设置旋转方向为反向
-  }
-
-  if (digitalRead(stopPin) == LOW)
-  {
-    isRunning = false; // 停止电机
-  }
-
-  if (isRunning)
-  {
-    stepper.step(direction); // 如果电机正在运行，则按照设置的方向旋转
-    stepsCount += direction; // 正向加1，反向减1
-    if (stepsCount >= maxSteps || stepsCount <= -maxSteps)
+    lastMotorCheck = millis();
+    if (digitalRead(startPin) == LOW && stepsCount < maxSteps)
     {
-      isRunning = false; // 达到最大步数范围时停止电机运行
+      isRunning = true; // 启动电机
+      direction = stepControl;    // 设置旋转方向为正向，并控制步进
     }
-  }
 
-  // yxr照明
-  //  读取开关状态，进行防抖处理
-  int reading = digitalRead(buttonPin1);
-  if (reading != lastButtonState)
-  {
-    lastDebounceTime = millis();
-  }
-  if (millis() - lastDebounceTime > debounceDelay)
-  {
-    if (reading != buttonState)
+    if (digitalRead(reversePin) == LOW && stepsCount > -maxSteps)
     {
-      buttonState = reading;
-      if (buttonState == LOW)
+      isRunning = true; // 启动电机
+      direction = -stepControl;   // 设置旋转方向为反向，并控制步进
+    }
+
+    if (digitalRead(stopPin) == LOW)
+    {
+      isRunning = false; // 停止电机
+    }
+
+    if (isRunning)
+    {
+      stepper.step(direction); // 如果电机正在运行，则按照设置的方向旋转
+      stepsCount += direction; // 正向加stepControl，反向减stepControl
+      if (stepsCount >= maxSteps || stepsCount <= -maxSteps)
       {
-        ledState = !ledState; // 切换LED状态
-        Serial.print("Button pressed. LED is now ");
-        Serial.println(ledState ? "ON" : "OFF");
+        isRunning = false; // 达到最大步数范围时停止电机运行
       }
     }
   }
-  lastButtonState = reading;
 
-  // 读取电位器数值，并映射到LED亮度范围
-  int potValue = analogRead(potentiometerPin);
-  brightness = map(potValue, 0, 4095, 0, 255);
-
-  // 打印电位器数值到串口监视器
-  Serial.print("Potentiometer value: ");
-  Serial.println(potValue);
-
-  // 根据LED状态控制LED亮度
-  if (ledState)
+  // 其他功能
+  static unsigned long lastOtherCheck = 0;
+  if (millis() - lastOtherCheck >= 10) // 每10毫秒检查一次其他功能
   {
-    analogWrite(ledPin, brightness); // 设置LED亮度
-  }
-  else
-  {
-    analogWrite(ledPin, 0); // LED关闭
-  }
+    lastOtherCheck = millis();
 
-  delay(10); // 稍作延迟以提高稳定性
-
-  // jcy 紫外线
-  buttonState3 = digitalRead(buttonPin3);
-
-  if (buttonState3 == LOW)
-  {
-    ledState2 = !ledState2;
-    digitalWrite(ledpin2, ledState2);
-    Serial.print("Button pressed. LED is now ");
-    Serial.println(ledState2 ? "ON" : "OFF");
-
-    if (ledState2)
+    // 照明功能
+    int reading = digitalRead(buttonPin1);
+    if (reading != lastButtonState)
     {
-      lastButtonPressTime = millis(); // Record the time when LED was turned ON
+      lastDebounceTime = millis();
+    }
+    if (millis() - lastDebounceTime > debounceDelay)
+    {
+      if (reading != buttonState)
+      {
+        buttonState = reading;
+        if (buttonState == LOW)
+        {
+          ledState = !ledState; // 切换LED状态
+          Serial.print("Button pressed. LED is now ");
+          Serial.println(ledState ? "ON" : "OFF");
+        }
+      }
+    }
+    lastButtonState = reading;
+
+    // 读取电位器数值，并映射到LED亮度范围
+    int potValue = analogRead(potentiometerPin);
+    brightness = map(potValue, 0, 4095, 0, 255);
+
+    // 打印电位器数值到串口监视器
+    Serial.print("Potentiometer value: ");
+    Serial.println(potValue);
+
+    // 根据LED状态控制LED亮度
+    if (ledState)
+    {
+      analogWrite(ledPin, brightness); // 设置LED亮度
+    }
+    else
+    {
+      analogWrite(ledPin, 0); // LED关闭
     }
 
-    delay(200);
-  }
+    // 紫外线功能
+    buttonState3 = digitalRead(buttonPin3);
 
-  // Check if it's time to turn off the LED automatically
-  if (ledState2 && (millis() - lastButtonPressTime >= ledAutoOffInterval))
-  {
-    ledState2 = false;
-    digitalWrite(ledpin2, LOW);
-    Serial.println("Auto turning off LED.");
-  }
+    if (buttonState3 == LOW)
+    {
+      ledState2 = !ledState2;
+      digitalWrite(ledpin2, ledState2);
+      Serial.print("Button pressed. LED is now ");
+      Serial.println(ledState2 ? "ON" : "OFF");
 
-  // pzy 风干功能
-  buttonState2 = digitalRead(buttonPin2);
+      if (ledState2)
+      {
+        lastButtonPressTime = millis(); // 记录LED开启的时间
+      }
+    }
 
-  if (buttonState2 == LOW)
-  {
+    // 检查是否到了自动关闭LED的时间
+    if (ledState2 && (millis() - lastButtonPressTime >= ledAutoOffInterval))
+    {
+      ledState2 = false;
+      digitalWrite(ledpin2, LOW);
+      Serial.println("Auto turning off LED.");
+    }
+
+    // 风扇功能
+    buttonState2 = digitalRead(buttonPin2); // 风干按钮
+
+    if (buttonState2 == LOW)
+    {
     deviceState = !deviceState;
     digitalWrite(fanPinA, deviceState);
     digitalWrite(fanPinB, LOW);
-    Serial.print("按钮被按下。LED和风扇现在都");
+    Serial.print("风干按钮被按下。风扇现在");
     Serial.println(deviceState ? "开启" : "关闭");
 
     if (deviceState)
     {
-      lastButtonPressTime2 = millis(); // 记录LED和风扇开启的时间
+      lastButtonPressTime2 = millis(); // 记录风扇开启的时间
     }
-
-    delay(200);
   }
 
-  // 检查是否到了自动关闭LED和风扇的时间
+  // 检查是否到了自动关闭风扇的时间
   if (deviceState && (millis() - lastButtonPressTime2 >= deviceAutoOffInterval2))
   {
     deviceState = false;
-    // digitalWrite(ledPin, LOW);
     digitalWrite(fanPinA, LOW);
     digitalWrite(fanPinB, LOW);
-    Serial.println("自动关闭LED和风扇。");
+    Serial.println("自动关闭风扇。");
   }
 
-//pzy烘干功能
-buttonState4 = digitalRead(buttonPin4);
+    // 烘干功能
+  buttonState4 = digitalRead(buttonPin4); // 烘干按钮
 
-if (buttonState4 == LOW) {
- deviceState4 = !deviceState4;
-digitalWrite(ledPin4, deviceState4);
-digitalWrite(fanPinA4, deviceState4);
- digitalWrite(fanPinB4, LOW);
-Serial.print("按钮被按下。LED和风扇现在都");
- Serial.println(deviceState4 ? "开启" : "关闭");
+  if (buttonState4 == LOW)
+  {
+    deviceState4 = !deviceState4;
+    digitalWrite(fanPinA4, deviceState4);
+    digitalWrite(fanPinB4, LOW);
+    digitalWrite(ledPin4, deviceState4); // 控制LED灯的状态与风扇同步
+    Serial.print("烘干按钮被按下。风扇和LED灯现在");
+    Serial.println(deviceState4 ? "开启" : "关闭");
 
-if (deviceState4) {
- lastButtonPressTime4 = millis(); // 记录LED和风扇开启的时间
- }
-
- delay(200);
+    if (deviceState4)
+    {
+      lastButtonPressTime4 = millis(); // 记录风扇和LED灯开启的时间
+    }
   }
 
-// 检查是否到了自动关闭LED和风扇的时间
-if (deviceState4 && (millis() - lastButtonPressTime4 >= deviceAutoOffInterval4)) {
- deviceState4 = false;
- digitalWrite(ledPin4, LOW);
- digitalWrite(fanPinA4, LOW);
- digitalWrite(fanPinB4, LOW);
- Serial.println("自动关闭LED和风扇。");
- }
+  // 检查是否到了自动关闭风扇和LED灯的时间
+  if (deviceState4 && (millis() - lastButtonPressTime4 >= deviceAutoOffInterval4))
+    {
+    deviceState4 = false;
+    digitalWrite(fanPinA4, LOW);
+    digitalWrite(fanPinB4, LOW);
+    digitalWrite(ledPin4, LOW); // 自动关闭LED灯
+    Serial.println("自动关闭风扇和LED灯。");
+    }
 
+  }
 }
