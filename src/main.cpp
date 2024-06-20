@@ -18,6 +18,8 @@ const int buttonPin2 = 0; // 按钮连接到 GPIO0
 const int fanPinA = 2;    // 风扇的A引脚连接到 GPIO2
 const int fanPinB = 4;    // 风扇的B引脚连接到 GPIO4
 
+const int timeButtonPin2 = 19; // 新增的负责加定时时间的按钮连接到 GPIO3
+
 int ledpin2 = 17;          // 连接到LED引脚
 const int buttonPin3 = 16; // 连接到开关紫外线按钮引脚
 
@@ -53,7 +55,15 @@ int brightness = 0;         // LED亮度
 int buttonState2 = 0;
 bool deviceState = false; // 控制LED和风扇的状态
 unsigned long lastButtonPressTime2 = 0;
-const unsigned long deviceAutoOffInterval2 = 15000; // 设备自动关闭的时间间隔，15秒
+unsigned long deviceAutoOffInterval2 = 15000; // 设备自动关闭的时间间隔，15秒
+
+// jcy风干定时
+int lastButtonState2 = HIGH;
+int timeButtonState2 = HIGH;
+int lastTimeButtonState2 = HIGH;
+
+unsigned long debounceDelay2 = 50;   // 去抖动延迟
+unsigned long lastDebounceTime2 = 0; // 上次去抖动时间
 
 // jcy紫外线
 bool ledState2 = false;
@@ -94,6 +104,13 @@ void setup()
   pinMode(buttonPin2, INPUT_PULLUP);
   pinMode(fanPinA, OUTPUT);
   pinMode(fanPinB, OUTPUT);
+  Serial.begin(9600);
+
+  // jcy风干定时
+  pinMode(buttonPin2, INPUT_PULLUP);
+  pinMode(fanPinA, OUTPUT);
+  pinMode(fanPinB, OUTPUT);
+  pinMode(timeButtonPin2, INPUT_PULLUP);
   Serial.begin(9600);
 
   // jcy 紫外线
@@ -252,6 +269,90 @@ void loop()
       Serial.println("自动关闭风扇。");
     }
 
+    // jcy风干定时
+    int reading2 = digitalRead(buttonPin2);
+    int timeReading2 = digitalRead(timeButtonPin2);
+
+    // 处理风扇开关按钮
+    if (reading2 != lastButtonState2)
+    {
+      lastDebounceTime2 = millis();
+    }
+
+    if ((millis() - lastDebounceTime2) > debounceDelay2)
+    {
+      if (reading2 != buttonState2)
+      {
+        buttonState2 = reading2;
+        if (buttonState2 == LOW)
+        {
+          deviceState = !deviceState;
+          digitalWrite(fanPinA, deviceState);
+          digitalWrite(fanPinB, LOW);
+          Serial.print("按钮被按下，风扇现在");
+          Serial.println(deviceState ? "开启" : "关闭");
+
+          if (deviceState)
+          {
+            lastButtonPressTime2 = millis(); // 记录风扇开启的时间
+          }
+          else
+          {
+            // 设备关闭后重置自动关闭时间为初始值
+            deviceAutoOffInterval2 = 15000;
+            digitalWrite(fanPinA, LOW);
+            digitalWrite(fanPinB, LOW);
+            Serial.println("手动关闭风扇。");
+          }
+        }
+      }
+    }
+
+    lastButtonState2 = reading2;
+
+    // 自动关闭风扇功能
+    if (deviceState && (millis() - lastButtonPressTime2 >= deviceAutoOffInterval2))
+    {
+      deviceState = false;
+      digitalWrite(fanPinA, LOW);
+      digitalWrite(fanPinB, LOW);
+
+      // 自动关闭后重置为初始状态
+      deviceAutoOffInterval2 = 15000;
+      lastButtonPressTime2 = 0;
+      Serial.println("自动关闭风扇。");
+    }
+
+    // 处理增加定时时间的按钮
+    if (timeReading2 != lastTimeButtonState2)
+    {
+      lastDebounceTime2 = millis();
+    }
+
+    if ((millis() - lastDebounceTime2) > debounceDelay2)
+    {
+      if (timeReading2 != timeButtonState2)
+      {
+        timeButtonState2 = timeReading2;
+        if (timeButtonState2 == LOW)
+        {
+          // 增加定时关闭时间，最大不超过 30 秒
+          if (deviceAutoOffInterval2 <= 27000) // 限制在 27 秒内增加
+          {
+            deviceAutoOffInterval2 += 3000;
+          }
+          else
+          {
+            deviceAutoOffInterval2 = 30000; // 达到 30 秒后不再增加
+          }
+          Serial.print("定时关闭时间增加 3 秒，当前定时时间为：");
+          Serial.println(deviceAutoOffInterval2);
+        }
+      }
+    }
+
+    lastTimeButtonState2 = timeReading2;
+
     // 烘干功能
     buttonState4 = digitalRead(buttonPin4); // 烘干按钮
 
@@ -328,15 +429,12 @@ void loop()
     digitalWrite(ledPin4, LOW);
     digitalWrite(fanPinA4, LOW);
     digitalWrite(fanPinB4, LOW);
+
+    // 在设备关闭后，重置为初始化状态
+    deviceAutoOffInterval4 = 15000;
     Serial.println("Automatically turn off LED and fan");
 
-    // 在设备关闭后的0.001秒内，重置为初始化状态
-
-    deviceAutoOffInterval4 = 15000;
-    digitalWrite(ledPin4, LOW);
-    digitalWrite(fanPinA4, LOW);
-    digitalWrite(fanPinB4, LOW);
-    Serial.println("Device reset to initial state after auto-off");
+       Serial.println("Device reset to initial state after auto-off");
   }
 
   if (timeReading != lastTimeButtonState)
