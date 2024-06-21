@@ -39,9 +39,9 @@ int direction = 1;      // 用于控制电机的旋转方向
 int stepsCount = 0;     // 用于计算电机转动的步数
 
 const int stepsPerRevolution = 512; // 一圈步进电机（28BYJ-48）有512步
-const int revolutions = 2;          // 每次转动二圈
+const int revolutions = 4;          // 每次转动四圈
 
-const int maxSteps = 2 * stepsPerRevolution; // 总步数设置为两圈的步数
+const int maxSteps = revolutions * stepsPerRevolution; // 总步数设置为四圈的步数
 
 // yxr照明
 int buttonState = 0;        // 开关状态
@@ -142,7 +142,7 @@ void loop()
 {
   // 电机控制
   static unsigned long lastMotorCheck = 0;
-  int stepControl = 10;                // 步进控制变量，可以根据需要调整
+  int stepControl = 15;                // 步进控制变量，可以根据需要调整
   if (millis() - lastMotorCheck >= 10) // 每10毫秒检查一次电机状态
   {
     lastMotorCheck = millis();
@@ -152,7 +152,7 @@ void loop()
       direction = stepControl; // 设置旋转方向为正向，并控制步进
     }
 
-    if (digitalRead(reversePin) == LOW && stepsCount > -maxSteps)
+    if (digitalRead(reversePin) == LOW && stepsCount > 0)
     {
       isRunning = true;         // 启动电机
       direction = -stepControl; // 设置旋转方向为反向，并控制步进
@@ -167,7 +167,7 @@ void loop()
     {
       stepper.step(direction); // 如果电机正在运行，则按照设置的方向旋转
       stepsCount += direction; // 正向加stepControl，反向减stepControl
-      if (stepsCount >= maxSteps || stepsCount <= -maxSteps)
+      if (stepsCount >= maxSteps || stepsCount <= 0)
       {
         isRunning = false; // 达到最大步数范围时停止电机运行
       }
