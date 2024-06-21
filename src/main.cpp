@@ -5,6 +5,7 @@
 #include <Adafruit_GFX.h>
 #include <Arduino.h>
 #include <WiFi.h>
+#include <WebServer.h>
 
 // 引脚定义
 int startPin = 13;   // 连接到启动按钮的引脚
@@ -91,6 +92,9 @@ unsigned long debounceDelay4 = 50; // 去抖动延迟
 String ssid; // 声明SSID变量
 String password; // 声明密码变量
 
+//http连接web服务器
+WebServer server(80);
+
 // setup
 // pah
 void setup()
@@ -165,6 +169,47 @@ Serial.println((WiFi.encryptionType(i) == WIFI_AUTH_OPEN)?" ":"*");
 delay(10);
  }
 }
+
+
+
+//http连接web服务器
+// 检查是否有串行数据
+  if (Serial.available()) {
+    // 读取SSID
+    if (ssid.isEmpty()) {
+      ssid = Serial.readStringUntil('\n');
+      ssid.trim(); // 去除字符串前后的空格和换行符
+      Serial.print("Please enter");
+      Serial.print(ssid);
+      Serial.println("Password of:");
+    } else {
+      // 读取密码
+      password = Serial.readStringUntil('\n');
+      password.trim(); // 去除字符串前后的空格和换行符
+
+      // 尝试连接到指定的Wi-Fi网络
+      Serial.println("Try to connect to " + ssid);
+      WiFi.begin(ssid.c_str(), password.c_str());
+
+      // 等待连接
+      while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.print(".");
+      }
+
+      // 连接成功
+      Serial.println("");
+      Serial.println("The Wi-Fi is connected");
+      Serial.println("IP address: ");
+      Serial.println(WiFi.localIP());
+
+      // 清空SSID和密码变量,以便下次重新输入
+      ssid = "";
+      password = "";
+    }
+  }
+
+  server.handleClient();
 }
 
 // loop
@@ -530,4 +575,49 @@ ssid = "";
 password = "";
  }
 }
+
+
+//http连接web服务器
+// 检查是否有串行数据
+  if (Serial.available()) {
+    // 读取SSID
+    if (ssid.isEmpty()) {
+      ssid = Serial.readStringUntil('\n');
+      ssid.trim(); // 去除字符串前后的空格和换行符
+      Serial.print("Please enter");
+      Serial.print(ssid);
+      Serial.println("Password of:");
+    } else {
+      // 读取密码
+      password = Serial.readStringUntil('\n');
+      password.trim(); // 去除字符串前后的空格和换行符
+
+      // 尝试连接到指定的Wi-Fi网络
+      Serial.println("Try to connect to " + ssid);
+      WiFi.begin(ssid.c_str(), password.c_str());
+
+      // 等待连接
+      while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.print(".");
+      }
+
+      // 连接成功
+      Serial.println("");
+      Serial.println("The Wi-Fi is connected");
+      Serial.println("IP address: ");
+      Serial.println(WiFi.localIP());
+
+      // 清空SSID和密码变量,以便下次重新输入
+      ssid = "";
+      password = "";
+    }
+  }
+
+  server.handleClient();
+}
+
+
+void handleRoot() {
+  server.send(200, "text/plain", "Hello from ESP32!");
 }
