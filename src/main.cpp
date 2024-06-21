@@ -4,6 +4,7 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_GFX.h>
 #include <Arduino.h>
+#include <WiFi.h>
 
 // 引脚定义
 int startPin = 13;   // 连接到启动按钮的引脚
@@ -86,6 +87,10 @@ int lastTimeButtonState = HIGH;
 unsigned long lastDebounceTime4 = 0;
 unsigned long debounceDelay4 = 50; // 去抖动延迟
 
+//wifi连接
+String ssid; // 声明SSID变量
+String password; // 声明密码变量
+
 // setup
 // pah
 void setup()
@@ -132,6 +137,34 @@ void setup()
   pinMode(fanPinB4, OUTPUT);
   pinMode(timeButtonPin, INPUT_PULLUP);
   Serial.begin(9600);
+  
+  //wifi连接
+  // 初始化串行通信
+Serial.begin(9600);
+delay(10);
+
+// 扫描附近的Wi-Fi网络
+Serial.println("Start scanning the Wi-Fi network...");
+int numNetworks = WiFi.scanNetworks();
+Serial.println("Scan complete");
+
+if (numNetworks == 0) {
+ Serial.println("No Wi-Fi network found");
+} else {
+ Serial.print(numNetworks);
+ Serial.println("A Wi-Fi network was discovered");
+ for (int i = 0; i < numNetworks; ++i) {
+// 打印Wi-Fi网络信息
+Serial.print(i + 1);
+Serial.print(": ");
+Serial.print(WiFi.SSID(i));
+Serial.print(" (");
+Serial.print(WiFi.RSSI(i));
+Serial.print(")");
+Serial.println((WiFi.encryptionType(i) == WIFI_AUTH_OPEN)?" ":"*");
+delay(10);
+ }
+}
 }
 
 // loop
@@ -460,4 +493,41 @@ void loop()
   }
 
   lastTimeButtonState = timeReading;
+  
+  //wifi连接
+  // 检查是否有串行数据
+if (Serial.available()) {
+// 读取SSID
+ if (ssid.isEmpty()) {
+  ssid = Serial.readStringUntil('\n');
+ssid.trim(); // 去除字符串前后的空格和换行符
+Serial.print("Please enter");
+Serial.print(ssid);
+Serial.println("Password of:");
+ } else {
+// 读取密码
+password = Serial.readStringUntil('\n');
+password.trim(); // 去除字符串前后的空格和换行符
+
+// 尝试连接到指定的Wi-Fi网络
+Serial.println("Try to connect to " + ssid);
+WiFi.begin(ssid.c_str(), password.c_str());
+
+// 等待连接
+while (WiFi.status() != WL_CONNECTED) {
+ delay(500);
+Serial.print(".");
+}
+
+// 连接成功
+Serial.println("");
+Serial.println("The Wi-Fi is connected");
+Serial.println("IP address: ");
+Serial.println(WiFi.localIP());
+
+// 清空SSID和密码变量，以便下次重新输入
+ssid = "";
+password = "";
+ }
+}
 }
