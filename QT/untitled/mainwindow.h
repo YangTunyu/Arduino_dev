@@ -23,6 +23,12 @@ private slots:
     void on_pushButton_pause_clicked();
     void updatePosition();
 
+    void on_pushButton_4_clicked();
+
+    void on_dial_valueChanged(int value);
+
+    void on_label_linkActivated(const QString &link);
+
 private:
     Ui::MainWindow *ui;
     QTimer *timer;
