@@ -13,6 +13,13 @@ MainWindow::MainWindow(QWidget *parent)
     currentDirection = None; // 初始化currentDirection
     paused = false; // 初始化paused
     connect(ui->pushButton_4, &QPushButton::clicked, this, &MainWindow::on_pushButton_4_clicked);
+    ui->setupUi(this);
+
+    connect(ui->connectButton, &QPushButton::clicked, this, &MainWindow::onConnectButtonClicked);
+    connect(ui->ledOnButton, &QPushButton::clicked, this, &MainWindow::onLEDOnButtonClicked);
+    connect(ui->ledOffButton, &QPushButton::clicked, this, &MainWindow::onLEDOffButtonClicked);
+    connect(tcpSocket, &QTcpSocket::readyRead, this, &MainWindow::onReadyRead);
+    connect(tcpSocket, &QTcpSocket::disconnected, this, &MainWindow::onDisconnected);
 }
 
 MainWindow::~MainWindow()
@@ -95,3 +102,54 @@ void MainWindow::on_label_linkActivated(const QString &link)
     connect(ui->dial, &QDial::valueChanged, this, &MainWindow::on_dial_valueChanged);
 
 }
+void MainWindow::onConnectButtonClicked()
+{
+    if (tcpSocket->state() == QAbstractSocket::UnconnectedState) {
+        QString ipAddress = ui->ipAddressEdit->text();
+        quint16 port = ui->portEdit->text().toUShort();
+        tcpSocket->connectToHost(ipAddress, port);
+
+        if (tcpSocket->waitForConnected(10000)) { // 增加超时时间到10秒
+            qDebug() << "Connected to ESP32 on" << ipAddress << port;
+        } else {
+            qDebug() << "Failed to connect to ESP32 on" << ipAddress << port;
+            qDebug() << tcpSocket->errorString();
+        }
+    } else {
+        qDebug() << "Already connected or connecting";
+    }
+}
+
+void MainWindow::onLEDOnButtonClicked()
+{
+    if (tcpSocket->state() == QAbstractSocket::ConnectedState) {
+        tcpSocket->write("LED_ON\r\n");
+        qDebug() << "Sent: LED_ON";
+    } else {
+        qDebug() << "Not connected";
+    }
+}
+
+void MainWindow::onLEDOffButtonClicked()
+{
+    if (tcpSocket->state() == QAbstractSocket::ConnectedState) {
+        tcpSocket->write("LED_OFF\r\n");
+        qDebug() << "Sent: LED_OFF";
+    } else {
+        qDebug() << "Not connected";
+    }
+}
+
+void MainWindow::onReadyRead()
+{
+    QByteArray data = tcpSocket->readAll();
+    qDebug() << "Received from ESP32:" << data;
+    ui->textEdit->append(data);
+}
+
+void MainWindow::onDisconnected()
+{
+    qDebug() << "Disconnected from ESP32";
+}
+
+

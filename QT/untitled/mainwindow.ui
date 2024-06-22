@@ -209,6 +209,75 @@
      <string>电位器数值</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="ledOnButton">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>360</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>LED ON</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="connectButton">
+    <property name="geometry">
+     <rect>
+      <x>160</x>
+      <y>450</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Connect</string>
+    </property>
+   </widget>
+   <widget class="QTextEdit" name="textEdit">
+    <property name="geometry">
+     <rect>
+      <x>440</x>
+      <y>370</y>
+      <width>104</width>
+      <height>71</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="ipAddressEdit">
+    <property name="geometry">
+     <rect>
+      <x>140</x>
+      <y>360</y>
+      <width>113</width>
+      <height>20</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="portEdit">
+    <property name="geometry">
+     <rect>
+      <x>140</x>
+      <y>410</y>
+      <width>113</width>
+      <height>20</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="ledOffButton">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>420</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>LED OFF</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

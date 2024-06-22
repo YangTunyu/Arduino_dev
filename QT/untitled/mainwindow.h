@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QTcpSocket>
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -22,12 +24,15 @@ private slots:
     void on_pushButton_3_clicked();
     void on_pushButton_pause_clicked();
     void updatePosition();
-
     void on_pushButton_4_clicked();
-
     void on_dial_valueChanged(int value);
-
     void on_label_linkActivated(const QString &link);
+    void onConnectButtonClicked();
+    void onLEDOnButtonClicked();
+    void onLEDOffButtonClicked();
+    void onReadyRead();
+    void onDisconnected();
+
 
 private:
     Ui::MainWindow *ui;
@@ -36,6 +41,7 @@ private:
     enum Direction { None, Up, Down }; // 枚举类型放在这里声明
     Direction currentDirection;
     bool paused;
+    QTcpSocket *tcpSocket;
 };
 
 #endif // MAINWINDOW_H
