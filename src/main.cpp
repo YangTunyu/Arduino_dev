@@ -7,6 +7,7 @@
 #include <WiFi.h>
 #include <WebServer.h>
 
+
 // 引脚定义
 int startPin = 13;   // 连接到启动按钮的引脚
 int stopPin = 23;    // 连接到停止按钮的引脚
@@ -52,6 +53,7 @@ int lastButtonState = HIGH; // 上一次的开关状态
 long lastDebounceTime = 0;  // 上一次按下或释放开关的时间
 long debounceDelay = 50;    // 防抖延迟时间
 int brightness = 0;         // LED亮度
+bool printed = false;
 
 // pzy风扇
 int buttonState2 = 0;
@@ -99,6 +101,7 @@ WebServer server(80);
 // pah
 void setup()
 {
+  Serial.begin(9600);
   // pah
   pinMode(startPin, INPUT_PULLUP);
   pinMode(stopPin, INPUT_PULLUP);
@@ -169,9 +172,6 @@ Serial.println((WiFi.encryptionType(i) == WIFI_AUTH_OPEN)?" ":"*");
 delay(10);
  }
 }
-
-
-
 //http连接web服务器
 // 检查是否有串行数据
   if (Serial.available()) {
@@ -284,8 +284,11 @@ void loop()
     brightness = map(potValue, 0, 4095, 0, 255);
 
     // 打印电位器数值到串口监视器
+    if (!printed) {
     Serial.print("Potentiometer value: ");
     Serial.println(potValue);
+    printed = true; // 将标志设为 true，表示已经打印过
+  }
 
     // 根据LED状态控制LED亮度
     if (ledState)

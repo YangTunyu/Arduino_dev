@@ -44,4 +44,33 @@ private:
     QTcpSocket *tcpSocket;
 };
 
+
+#include <QMainWindow>
+#include <QTcpSocket>
+
+QT_BEGIN_NAMESPACE
+namespace Ui { class MainWindow; }
+QT_END_NAMESPACE
+
+class MainWindow1 : public QMainWindow
+{
+    Q_OBJECT
+
+public:
+
+    ~MainWindow1();
+
+private slots:
+    void onConnectButtonClicked();
+    void onLEDOnButtonClicked();
+    void onLEDOffButtonClicked();
+    void onReadyRead();
+    void onDisconnected();
+
+private:
+    Ui::MainWindow *ui;
+    QTcpSocket *tcpSocket;
+};
+
 #endif // MAINWINDOW_H
+
