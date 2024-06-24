@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 #include <QTimer>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -27,10 +29,9 @@ private slots:
     void updateUVTimer();
     void updateWindTimer();
     void updateDryTimer();
-
     void on_windButtonTimer_clicked();
-
     void on_dryButtonTimer_clicked();
+    void handleNetworkReply(QNetworkReply *reply);
 
 private:
     Ui::MainWindow *ui;
@@ -44,10 +45,12 @@ private:
     bool uvState;
     bool windState;
     bool dryState;
+    QNetworkAccessManager *networkManager;
+
+    void sendRequest(const QString &url);
 };
 
 #endif // MAINWINDOW_H
-
 
 
 

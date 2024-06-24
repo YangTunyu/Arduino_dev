@@ -1,6 +1,10 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QDebug>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+
+#define ESP32_IP_ADDRESS "192.168.43.179"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -12,12 +16,14 @@ MainWindow::MainWindow(QWidget *parent)
     , uvState(false) // 初始化紫外线状态为关闭
     , windState(false) // 初始化风干状态为关闭
     , dryState(false) // 初始化烘干状态为关闭
+    , networkManager(new QNetworkAccessManager(this))
 {
     ui->setupUi(this);
 
     connect(&uvTimer, &QTimer::timeout, this, &MainWindow::updateUVTimer);
     connect(&windTimer, &QTimer::timeout, this, &MainWindow::updateWindTimer);
     connect(&dryTimer, &QTimer::timeout, this, &MainWindow::updateDryTimer);
+    connect(networkManager, &QNetworkAccessManager::finished, this, &MainWindow::handleNetworkReply);
 
     // 初始化按钮文本
     ui->lightButton->setText("照明 开");
@@ -36,13 +42,33 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::sendRequest(const QString &url)
+{
+    QNetworkRequest request;
+    request.setUrl(QUrl(url));
+    networkManager->get(request);
+}
+
+void MainWindow::handleNetworkReply(QNetworkReply *reply)
+{
+    if (reply->error() == QNetworkReply::NoError) {
+        QByteArray response = reply->readAll();
+        qDebug() << "Response from ESP32:" << response;
+    } else {
+        qDebug() << "Error:" << reply->errorString();
+    }
+    reply->deleteLater();
+}
+
 void MainWindow::on_lightButton_clicked()
 {
     lightState = !lightState; // 切换状态
     if (lightState) {
         ui->lightButton->setText("照明 关");
+        sendRequest("http://" ESP32_IP_ADDRESS ":80/light_on");
     } else {
         ui->lightButton->setText("照明 开");
+        sendRequest("http://" ESP32_IP_ADDRESS ":80/light_off");
     }
 }
 
@@ -50,17 +76,17 @@ void MainWindow::on_uvButton_clicked()
 {
     uvState = !uvState; // 切换状态
     if (uvState) {
-        //写上通过wifi发送紫外开的指令
         uvTimeRemaining = 15; // 重置倒计时
         ui->uvLabel->setText(QString::number(uvTimeRemaining));
         ui->uvLabel->show();
         uvTimer.start(1000); // 每秒更新一次
         ui->uvButton->setText("紫外线 关");
+        sendRequest("http://" ESP32_IP_ADDRESS ":80/uv_on");
     } else {
-        //写上通过wifi发送紫外关的指令
         uvTimer.stop();
         ui->uvLabel->hide();
         ui->uvButton->setText("紫外线 开");
+        sendRequest("http://" ESP32_IP_ADDRESS ":80/uv_off");
     }
 }
 
@@ -68,19 +94,17 @@ void MainWindow::on_windButton_clicked()
 {
     windState = !windState; // 切换风干的状态
     if (windState) {
-        //写上通过wifi发送风干开的指令
         windTimeRemaining = 15; // 重置倒计时
         ui->windLabel->setText(QString::number(windTimeRemaining));
         ui->windLabel->show();
         windTimer.start(1000); // 每秒更新一次
         ui->windButton->setText("风干 关");
-
+        sendRequest("http://" ESP32_IP_ADDRESS ":80/wind_on");
     } else {
-        //写上通过WiFi发送风干关的指令
         windTimer.stop();
         ui->windLabel->hide();
         ui->windButton->setText("风干 开");
-
+        sendRequest("http://" ESP32_IP_ADDRESS ":80/wind_off");
     }
 }
 
@@ -88,17 +112,17 @@ void MainWindow::on_dryButton_clicked()
 {
     dryState = !dryState; // 切换状态
     if (dryState) {
-        //写上通过WiFi发送烘干开的指令
         dryTimeRemaining = 15; // 重置倒计时
         ui->dryLabel->setText(QString::number(dryTimeRemaining));
         ui->dryLabel->show();
         dryTimer.start(1000); // 每秒更新一次
         ui->dryButton->setText("烘干 关");
+        sendRequest("http://" ESP32_IP_ADDRESS ":80/dry_on");
     } else {
-        //写上通过WiFi发送烘干关的指令
         dryTimer.stop();
         ui->dryLabel->hide();
         ui->dryButton->setText("烘干 开");
+        sendRequest("http://" ESP32_IP_ADDRESS ":80/dry_off");
     }
 }
 
@@ -108,7 +132,6 @@ void MainWindow::on_stopButton_clicked()
     windTimer.stop();
     dryTimer.stop();
 
-    // 重置所有开关状态和按钮文本
     uvState = false;
     windState = false;
     dryState = false;
@@ -116,24 +139,23 @@ void MainWindow::on_stopButton_clicked()
     ui->windButton->setText("风干 开");
     ui->dryButton->setText("烘干 开");
 
-    // 隐藏所有倒计时显示
     ui->uvLabel->hide();
     ui->windLabel->hide();
     ui->dryLabel->hide();
+
+    sendRequest("http://" ESP32_IP_ADDRESS ":80/stop_all");
 }
 
 void MainWindow::on_upButton_clicked()
 {
-    // 这里实现晾衣架上升逻辑
-    // 例如发送信号或调用相应函数
     qDebug() << "晾衣架上升";
+    sendRequest("http://" ESP32_IP_ADDRESS ":80/up");
 }
 
 void MainWindow::on_downButton_clicked()
 {
-    // 这里实现晾衣架下降逻辑
-    // 例如发送信号或调用相应函数
     qDebug() << "晾衣架下降";
+    sendRequest("http://" ESP32_IP_ADDRESS ":80/down");
 }
 
 void MainWindow::updateUVTimer()
@@ -143,9 +165,10 @@ void MainWindow::updateUVTimer()
         ui->uvLabel->setText(QString::number(uvTimeRemaining));
     } else {
         uvTimer.stop();
-        ui->uvButton->setText("紫外线 开"); // 倒计时结束时重置按钮文本
-        uvState = false; // 重置状态
-        ui->uvLabel->hide(); // 隐藏倒计时显示
+        ui->uvButton->setText("紫外线 开");
+        uvState = false;
+        ui->uvLabel->hide();
+        sendRequest("http://" ESP32_IP_ADDRESS ":80/uv_off");
     }
 }
 
@@ -156,9 +179,10 @@ void MainWindow::updateWindTimer()
         ui->windLabel->setText(QString::number(windTimeRemaining));
     } else {
         windTimer.stop();
-        ui->windButton->setText("风干 开"); // 倒计时结束时重置按钮文本
-        windState = false; // 重置状态
-        ui->windLabel->hide(); // 隐藏倒计时显示
+        ui->windButton->setText("风干 开");
+        windState = false;
+        ui->windLabel->hide();
+        sendRequest("http://" ESP32_IP_ADDRESS ":80/wind_off");
     }
 }
 
@@ -169,9 +193,10 @@ void MainWindow::updateDryTimer()
         ui->dryLabel->setText(QString::number(dryTimeRemaining));
     } else {
         dryTimer.stop();
-        ui->dryButton->setText("烘干 开"); // 倒计时结束时重置按钮文本
-        dryState = false; // 重置状态
-        ui->dryLabel->hide(); // 隐藏倒计时显示
+        ui->dryButton->setText("烘干 开");
+        dryState = false;
+        ui->dryLabel->hide();
+        sendRequest("http://" ESP32_IP_ADDRESS ":80/dry_off");
     }
 }
 
@@ -184,8 +209,6 @@ void MainWindow::on_windButtonTimer_clicked()
         windTimeRemaining = 31;
     }
 }
-
-
 
 void MainWindow::on_dryButtonTimer_clicked()
 {
