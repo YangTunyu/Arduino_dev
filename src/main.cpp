@@ -6,6 +6,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <WebServer.h>
+#include "HX711.h"
 
 
 // 引脚定义
@@ -33,6 +34,8 @@ const int fanPinB4 = 14;   // 风扇的B引脚连接到 GPIO14 (D1)
 
 const int timeButtonPin = 18; // 新增的负责加定时时间的按钮连接到 GPIO3 (D3)
 
+const int buzzerPin = 21; // 连接到蜂鸣器的引脚
+
 // 其余部分
 // pah
 Stepper_28BYJ_48 stepper(14, 27, 26, 25);
@@ -45,6 +48,20 @@ const int stepsPerRevolution = 512; // 一圈步进电机（28BYJ-48）有512步
 const int revolutions = 4;          // 每次转动四圈
 
 const int maxSteps = revolutions * stepsPerRevolution; // 总步数设置为四圈的步数
+
+
+// zby 阻力重量检测
+  
+bool buzzerState = false; // 蜂鸣器状态
+
+const int LOADCELL_DOUT_PIN = 2;
+const int LOADCELL_SCK_PIN = 3;
+const float CALIBRATION_FACTOR = 833.33; // 100000 / 120 = 833.33
+const float INITIAL_WEIGHT = 100.0; // Initial weight of the container in grams
+
+HX711 scale;
+float initialWeight = 0.0;
+
 
 // yxr照明
 int buttonState = 0;        // 开关状态
@@ -89,6 +106,7 @@ int lastTimeButtonState = HIGH;
 
 unsigned long lastDebounceTime4 = 0;
 unsigned long debounceDelay4 = 50; // 去抖动延迟
+
 
 //wifi连接
 String ssid; // 声明SSID变量
@@ -144,6 +162,22 @@ void setup()
   pinMode(fanPinB4, OUTPUT);
   pinMode(timeButtonPin, INPUT_PULLUP);
   Serial.begin(9600);
+
+  //zby 阻力重量检测
+   Serial.begin(57600);
+  scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
+  scale.set_scale(CALIBRATION_FACTOR);
+
+  pinMode(startPin, INPUT_PULLUP);
+  pinMode(stopPin, INPUT_PULLUP);
+  pinMode(reversePin, INPUT_PULLUP);
+  pinMode(buzzerPin, OUTPUT); // 设置蜂鸣器引脚为输出模式
+
+  digitalWrite(buzzerPin, HIGH); // 初始状态为高电平，关闭蜂鸣器
+
+  initialWeight = scale.get_units() - INITIAL_WEIGHT;
+  Serial.print("Initial Weight (g): ");
+  Serial.println(initialWeight);
   
   //wifi连接
   // 初始化串行通信
@@ -225,12 +259,14 @@ void loop()
   {
     lastMotorCheck = millis();
     if (digitalRead(startPin) == LOW && stepsCount < maxSteps)
+     if (digitalRead(startPin) == LOW && stepsCount < maxSteps && isRunning == 1)
     {
       isRunning = true;        // 启动电机
       direction = stepControl; // 设置旋转方向为正向，并控制步进
     }
 
     if (digitalRead(reversePin) == LOW && stepsCount > 0)
+     if (digitalRead(reversePin) == LOW && stepsCount > 0 && isRunning == 1)
     {
       isRunning = true;         // 启动电机
       direction = -stepControl; // 设置旋转方向为反向，并控制步进
@@ -250,6 +286,59 @@ void loop()
         isRunning = false; // 达到最大步数范围时停止电机运行
       }
     }
+
+     if (isRunning == 1)
+    {
+      stepper.step(direction); // 如果电机正在运行，则按照设置的方向旋转
+      stepsCount += direction; // 正向加stepControl，反向减stepControl
+      if (stepsCount >= maxSteps || stepsCount <= 0)
+      {
+        isRunning = 0; // 达到最大步数范围时停止电机运行
+      }
+    }
+  }
+
+
+
+  //阻力重力检测功能
+  if (scale.wait_ready_timeout(1000)) {
+    float reading = scale.get_units() - INITIAL_WEIGHT;
+    if (reading < 0) {
+      reading = 0; // 确保重量不为负值
+    }
+    Serial.print("Item Weight (g): ");
+    Serial.println(reading);
+
+    if (reading > 2500) {
+      digitalWrite(stopPin, HIGH); // 触发停止按钮
+      isRunning = 0; // 停止电机
+      buzzerState = true; // 切换蜂鸣器状态
+      digitalWrite(buzzerPin, LOW); // 根据状态控制蜂鸣器
+    } else if (abs(reading - initialWeight) > 20) {
+      digitalWrite(stopPin, HIGH); // 触发停止按钮
+      isRunning = 0; // 停止电机
+      buzzerState = !buzzerState; // 切换蜂鸣器状态
+      digitalWrite(buzzerPin, buzzerState ? LOW : HIGH); // 根据状态控制蜂鸣器
+      delay(500); // 延时0.5秒
+      digitalWrite(buzzerPin, HIGH); // 关闭蜂鸣器
+    } else {
+      digitalWrite(stopPin, LOW); // 重置停止按钮
+      if (initialWeight <= 2500) {
+        if (digitalRead(startPin) == LOW && stepsCount < maxSteps)
+        {
+          isRunning = 1;        // 启动电机
+          direction = stepControl; // 设置旋转方向为正向，并控制步进
+        }
+
+        if (digitalRead(reversePin) == LOW && stepsCount > 0)
+        {
+          isRunning = 1;         // 启动电机
+          direction = -stepControl; // 设置旋转方向为反向，并控制步进
+        }
+      }
+    }
+  } else {
+    Serial.println("HX711 not found.");
   }
 
   // 其他功能
@@ -624,3 +713,4 @@ password = "";
 void handleRoot() {
   server.send(200, "text/plain", "Hello from ESP32!");
 }
+

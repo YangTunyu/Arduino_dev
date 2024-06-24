@@ -4,7 +4,7 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 
-#define ESP32_IP_ADDRESS "192.168.43.179"
+#define ESP32_IP_ADDRESS "192.168.43.198"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -202,21 +202,18 @@ void MainWindow::updateDryTimer()
 
 void MainWindow::on_windButtonTimer_clicked()
 {
-    if (dryTimeRemaining <= 31) {
-        windTimeRemaining = windTimeRemaining + 4;
+    windTimeRemaining += 3; // 每次增加3秒
+    if (windTimeRemaining > 30) { // 上限30秒
+        windTimeRemaining = 30;
     }
-    if (windTimeRemaining > 31) {
-        windTimeRemaining = 31;
-    }
+    sendRequest("http://" ESP32_IP_ADDRESS ":80/set_fan_duration?duration=" + QString::number(windTimeRemaining));
 }
 
 void MainWindow::on_dryButtonTimer_clicked()
 {
-    if (dryTimeRemaining <= 31) {
-        dryTimeRemaining = dryTimeRemaining + 4;
+    dryTimeRemaining += 3; // 每次增加3秒
+    if (dryTimeRemaining > 30) { // 上限30秒
+        dryTimeRemaining = 30;
     }
-    if (dryTimeRemaining > 31) {
-        dryTimeRemaining = 31;
-    }
+    sendRequest("http://" ESP32_IP_ADDRESS ":80/set_dry_duration?duration=" + QString::number(dryTimeRemaining));
 }
-
