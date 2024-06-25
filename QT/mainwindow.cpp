@@ -25,16 +25,55 @@ MainWindow::MainWindow(QWidget *parent)
     connect(&dryTimer, &QTimer::timeout, this, &MainWindow::updateDryTimer);
     connect(networkManager, &QNetworkAccessManager::finished, this, &MainWindow::handleNetworkReply);
 
+
+    ui->backgroundlabel->setStyleSheet("background-color: lightgrey; border: 2px solid blue;");
+     ui->line->setStyleSheet("border: 0.5px solid blue;");
+     ui->line_2->setStyleSheet("border: 1px solid blue;");
+
+
+
+
+
+
     // 初始化按钮文本
     ui->lightButton->setText("照明 开");
     ui->uvButton->setText("紫外线 开");
     ui->windButton->setText("风干 开");
     ui->dryButton->setText("烘干 开");
+    // 初始化标签文本
+    ui->uvLabel->setText("");
+    ui->windLabel->setText("");
+    ui->dryLabel->setText("");
 
-    // 隐藏倒计时显示
-    ui->uvLabel->hide();
-    ui->windLabel->hide();
-    ui->dryLabel->hide();
+    // 设置字体加粗、右对齐和增大字体大小
+    // 设置 uvLabel 的字体加粗、右对齐、增大字体大小和背景颜色
+    QFont font = ui->uvLabel->font();
+    font.setBold(true);
+    font.setPointSize(15); // 设置字体大小
+    ui->uvLabel->setFont(font);
+    ui->uvLabel->setAlignment(Qt::AlignRight);
+    ui->uvLabel->setStyleSheet("background-color: lightgrey; color: red;"); // 设置背景颜色和字体颜色
+
+
+
+    font = ui->windLabel->font();
+    font.setBold(true);
+    font.setPointSize(15); // 设置字体大小
+    ui->windLabel->setFont(font);
+    ui->windLabel->setAlignment(Qt::AlignRight);
+    ui->windLabel->setStyleSheet("background-color: lightgrey; color: red;"); // 设置背景颜色和字体颜色
+
+    font = ui->dryLabel->font();
+    font.setBold(true);
+    font.setPointSize(15); // 设置字体大小
+    ui->dryLabel->setFont(font);
+    ui->dryLabel->setAlignment(Qt::AlignRight);
+    ui->dryLabel->setStyleSheet("background-color: lightgrey; color: red;"); // 设置背景颜色和字体颜色
+
+
+    ui->upButton->setStyleSheet("QPushButton { border-image: url(:/image/upbutton_image.png); }");
+    ui->downButton->setStyleSheet("QPushButton { border-image: url(:/image/downbutton_image.png); }");
+
 }
 
 MainWindow::~MainWindow()
@@ -77,10 +116,17 @@ void MainWindow::on_uvButton_clicked()
     uvState = !uvState; // 切换状态
     if (uvState) {
         uvTimeRemaining = 15; // 重置倒计时
-        ui->uvLabel->setText(QString::number(uvTimeRemaining));
+        ui->uvLabel->setText(QString::asprintf("00:%02d", uvTimeRemaining));
         ui->uvLabel->show();
         uvTimer.start(1000); // 每秒更新一次
         ui->uvButton->setText("紫外线 关");
+
+        // 设置字体加粗和右对齐
+        QFont font = ui->uvLabel->font();
+        font.setBold(true);
+        ui->uvLabel->setFont(font);
+        ui->uvLabel->setAlignment(Qt::AlignRight);
+
         sendRequest("http://" ESP32_IP_ADDRESS ":80/uv_on");
     } else {
         uvTimer.stop();
@@ -90,15 +136,23 @@ void MainWindow::on_uvButton_clicked()
     }
 }
 
+
 void MainWindow::on_windButton_clicked()
 {
     windState = !windState; // 切换风干的状态
     if (windState) {
         windTimeRemaining = 15; // 重置倒计时
-        ui->windLabel->setText(QString::number(windTimeRemaining));
+        ui->windLabel->setText(QString::asprintf("00:%02d", windTimeRemaining));
         ui->windLabel->show();
         windTimer.start(1000); // 每秒更新一次
         ui->windButton->setText("风干 关");
+
+        // 设置字体加粗和右对齐
+        QFont font = ui->windLabel->font();
+        font.setBold(true);
+        ui->windLabel->setFont(font);
+        ui->windLabel->setAlignment(Qt::AlignRight);
+
         sendRequest("http://" ESP32_IP_ADDRESS ":80/wind_on");
     } else {
         windTimer.stop();
@@ -108,15 +162,23 @@ void MainWindow::on_windButton_clicked()
     }
 }
 
+
 void MainWindow::on_dryButton_clicked()
 {
     dryState = !dryState; // 切换状态
     if (dryState) {
         dryTimeRemaining = 15; // 重置倒计时
-        ui->dryLabel->setText(QString::number(dryTimeRemaining));
+        ui->dryLabel->setText(QString::asprintf("00:%02d", dryTimeRemaining));
         ui->dryLabel->show();
         dryTimer.start(1000); // 每秒更新一次
         ui->dryButton->setText("烘干 关");
+
+        // 设置字体加粗和右对齐
+        QFont font = ui->dryLabel->font();
+        font.setBold(true);
+        ui->dryLabel->setFont(font);
+        ui->dryLabel->setAlignment(Qt::AlignRight);
+
         sendRequest("http://" ESP32_IP_ADDRESS ":80/dry_on");
     } else {
         dryTimer.stop();
@@ -162,7 +224,7 @@ void MainWindow::updateUVTimer()
 {
     if (uvTimeRemaining > 0) {
         uvTimeRemaining--;
-        ui->uvLabel->setText(QString::number(uvTimeRemaining));
+        ui->uvLabel->setText(QString::asprintf("00:%02d", uvTimeRemaining));
     } else {
         uvTimer.stop();
         ui->uvButton->setText("紫外线 开");
@@ -176,7 +238,7 @@ void MainWindow::updateWindTimer()
 {
     if (windTimeRemaining > 0) {
         windTimeRemaining--;
-        ui->windLabel->setText(QString::number(windTimeRemaining));
+        ui->windLabel->setText(QString::asprintf("00:%02d", windTimeRemaining));
     } else {
         windTimer.stop();
         ui->windButton->setText("风干 开");
@@ -190,7 +252,7 @@ void MainWindow::updateDryTimer()
 {
     if (dryTimeRemaining > 0) {
         dryTimeRemaining--;
-        ui->dryLabel->setText(QString::number(dryTimeRemaining));
+        ui->dryLabel->setText(QString::asprintf("00:%02d", dryTimeRemaining));
     } else {
         dryTimer.stop();
         ui->dryButton->setText("烘干 开");

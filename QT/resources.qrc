@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/images"/>
+    <qresource prefix="/\image"/>
+    <qresource prefix="/image">
+        <file>upbutton_image.png</file>
+        <file>downbutton_image.png</file>
+    </qresource>
+</RCC>
