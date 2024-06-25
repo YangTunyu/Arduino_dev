@@ -59,7 +59,7 @@ QLabel {
      <string/>
     </property>
    </widget>
-   <widget class="QPushButton" name="stopButton">
+   <widget class="QPushButton" name="pauseButton">
     <property name="geometry">
      <rect>
       <x>261</x>
@@ -500,7 +500,7 @@ QLabel {
    </widget>
    <zorder>backgroundlabel</zorder>
    <zorder>upButton</zorder>
-   <zorder>stopButton</zorder>
+   <zorder>pauseButton</zorder>
    <zorder>downButton</zorder>
    <zorder>lightButton</zorder>
    <zorder>uvButton</zorder>

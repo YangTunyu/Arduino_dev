@@ -26,36 +26,36 @@ private slots:
     void on_stopButton_clicked();
     void on_upButton_clicked();
     void on_downButton_clicked();
+    void on_pauseButton_clicked();
+    void on_windButtonTimer_clicked();
+    void on_dryButtonTimer_clicked();
+
     void updateUVTimer();
     void updateWindTimer();
     void updateDryTimer();
-    void on_windButtonTimer_clicked();
-    void on_dryButtonTimer_clicked();
     void handleNetworkReply(QNetworkReply *reply);
 
 private:
+    void sendRequest(const QString &url);
+
     Ui::MainWindow *ui;
+
     QTimer uvTimer;
     QTimer windTimer;
     QTimer dryTimer;
+
     int uvTimeRemaining;
     int windTimeRemaining;
     int dryTimeRemaining;
+
     bool lightState;
     bool uvState;
     bool windState;
     bool dryState;
-    QNetworkAccessManager *networkManager;
 
-    void sendRequest(const QString &url);
+    QNetworkAccessManager *networkManager;
 };
 
 #endif // MAINWINDOW_H
-
-
-
-
-
-
 
 

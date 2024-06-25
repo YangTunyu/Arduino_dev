@@ -150,14 +150,15 @@ void handleStopAll() {
   isPaused = false; // 重置暂停状态
 }
 
+void handlePauseMotor() {
+  isMotorRunning = false; // 只暂停电机，不影响其他功能
+  server.send(200, "text/plain", "Motor paused");
+}
+
 void handleUp() {
-  if (canMoveUp && !isPaused) {
-    if (isMotorRunning) {
-      direction = stepControl; // 设置旋转方向为正向
-    } else {
-      isMotorRunning = true;
-      direction = stepControl; // 设置旋转方向为正向
-    }
+  if (canMoveUp && !isPaused && stepsCount < stepsPerRevolution * 4) {
+    isMotorRunning = true;
+    direction = stepControl; // 设置旋转方向为正向
     server.send(200, "text/plain", "Up");
   } else {
     server.send(200, "text/plain", "Cannot move up further");
@@ -165,13 +166,9 @@ void handleUp() {
 }
 
 void handleDown() {
-  if (canMoveDown && !isPaused) {
-    if (isMotorRunning) {
-      direction = -stepControl; // 设置旋转方向为反向
-    } else {
-      isMotorRunning = true;
-      direction = -stepControl; // 设置旋转方向为反向
-    }
+  if (canMoveDown && !isPaused && stepsCount > 0) {
+    isMotorRunning = true;
+    direction = -stepControl; // 设置旋转方向为反向
     server.send(200, "text/plain", "Down");
   } else {
     server.send(200, "text/plain", "Cannot move down further");
@@ -196,13 +193,6 @@ void handleSetDryDuration() {
   } else {
     server.send(400, "text/plain", "Missing duration parameter");
   }
-}
-
-void handlePauseMotor() {
-  isMotorRunning = false;
-  digitalWrite(buzzerPin, HIGH); // 关闭蜂鸣器
-  buzzerState = false;
-  server.send(200, "text/plain", "Motor paused");
 }
 
 void setup() {
@@ -293,16 +283,14 @@ void loop() {
       if (stepsCount >= stepsPerRevolution * 4) {
         canMoveUp = false;
         canMoveDown = true;
-      } else if (stepsCount <= -stepsPerRevolution * 4) {
+        isMotorRunning = false; // 达到最大步数范围时停止电机运行
+      } else if (stepsCount <= 0) {
         canMoveDown = false;
         canMoveUp = true;
+        isMotorRunning = false; // 达到最小步数范围时停止电机运行
       } else {
         canMoveUp = true;
         canMoveDown = true;
-      }
-      if (stepsCount >= stepsPerRevolution * 4 || stepsCount <= -stepsPerRevolution * 4) {
-        isMotorRunning = false; // 达到最大步数范围时停止电机运行
-        stepsCount = 0; // 重置步数计数
       }
     }
   }
@@ -452,11 +440,3 @@ void loop() {
     initialWeight = scale.get_units() - INITIAL_WEIGHT; // 更新初始重量
   }
 }
- 
-
-
-
-
-
-
-
