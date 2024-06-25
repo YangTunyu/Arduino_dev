@@ -4,7 +4,7 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 
-#define ESP32_IP_ADDRESS "192.168.43.198"
+#define ESP32_IP_ADDRESS "192.168.43.179"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -217,3 +217,5 @@ void MainWindow::on_dryButtonTimer_clicked()
     }
     sendRequest("http://" ESP32_IP_ADDRESS ":80/set_dry_duration?duration=" + QString::number(dryTimeRemaining));
 }
+
+
