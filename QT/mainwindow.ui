@@ -25,7 +25,7 @@
   </property>
   <property name="styleSheet">
    <string notr="true">QWidget {
-    background-color: #ADD8E6; /* 浅蓝色背景 */
+    background-color: rgb(182,199,234); /* 浅蓝色背景 */
 border-radius: 10px;       /* 设置MainWindow的圆角半径为10px */
 }
 </string>
@@ -303,7 +303,7 @@ QLabel {
     </property>
     <property name="styleSheet">
      <string notr="true">QPushButton {
-    background-color: #F4A460; /* 沙棕色背景 */
+    background-color: #efeeee; /* 沙棕色背景 */
     color: white;
     border: 2px solid #000;
     border-radius: 5px;
@@ -332,7 +332,7 @@ QLabel {
     </property>
     <property name="styleSheet">
      <string notr="true">QPushButton {
-    background-color: #F4A460; /* 沙棕色背景 */
+   background-color: #efeeee;  /* 沙棕色背景 */
     color: white;
     border: 2px solid #000;
     border-radius: 5px;
@@ -361,7 +361,7 @@ QLabel {
     </property>
     <property name="styleSheet">
      <string notr="true">QPushButton {
-    background-color: #F4A460; /* 沙棕色背景 */
+    background-color: #efeeee;  /* 沙棕色背景 */
     color: white;
     border: 2px solid #000;
     border-radius: 5px;
@@ -467,6 +467,11 @@ QLabel {
       <width>351</width>
       <height>111</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QWidget {
+    background-color: #f4f4f4; /* 浅蓝色背景 */ 
+}</string>
     </property>
     <property name="text">
      <string/>
