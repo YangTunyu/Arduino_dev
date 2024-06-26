@@ -14,6 +14,7 @@ WebServer server(80);
 
 // 定义引脚
 const int ledPin = 3; // LED引脚，根据实际情况调整
+const int ledButtonPin = 5; // 物理开关引脚用于LED控制
 const int uvPin = 2;  // UV灯引脚，根据实际情况调整
 const int fanPinA = 1; // 风扇引脚A
 const int fanPinB = 4; // 风扇引脚B
@@ -93,7 +94,6 @@ void handleUVOff() {
   digitalWrite(uvPin, LOW);
   uvState = false;
   server.send(200, "text/plain", "UV is OFF");
-  resetDurations(); // 重置时间
 }
 
 void handleWindOn() {
@@ -131,12 +131,12 @@ void handleDryOn() {
 
 void handleDryOff() {
   dryingFanState = false;
+  digitalWrite(dryLedPin, LOW);
+  dryLedState = false;
   if (!fanState) {
     digitalWrite(fanPinA, LOW);
     digitalWrite(fanPinB, LOW);
   }
-  digitalWrite(dryLedPin, LOW);
-  dryLedState = false;
   server.send(200, "text/plain", "Dry is OFF");
 }
 
@@ -227,6 +227,7 @@ void setup() {
   pinMode(dryLedPin, OUTPUT);
   digitalWrite(dryLedPin, LOW); // 确保新的LED灯初始状态为关闭
 
+  pinMode(ledButtonPin, INPUT_PULLUP); // 配置LED按钮引脚
   pinMode(uvButtonPin, INPUT_PULLUP); // 配置UV按钮引脚
   pinMode(fanButtonPin, INPUT_PULLUP); // 配置风扇按钮引脚
   pinMode(dryControlButtonPin, INPUT_PULLUP); // 配置同时控制风扇和LED灯的按钮引脚
@@ -269,6 +270,21 @@ void setup() {
 }
 
 void loop() {
+  // 检查LED物理按钮
+  if (digitalRead(ledButtonPin) == LOW) {
+    delay(50); // 去抖动
+    if (digitalRead(ledButtonPin) == LOW) {
+      if (ledState) {
+        handleLightOff(); // 如果LED打开则关闭
+      } else {
+        handleLightOn(); // 如果LED关闭则打开
+      }
+      while (digitalRead(ledButtonPin) == LOW) {
+        delay(10); // 等待按钮释放
+      }
+    }
+  }
+  
   // 处理客户端请求
   server.handleClient();
 
@@ -302,22 +318,12 @@ void loop() {
 
   // 检查风扇倒计时
   if (fanState && (millis() - fanStartTime >= fanDuration)) {
-    fanState = false; // 倒计时结束后只更新风扇状态为关闭
-    if (!dryingFanState) {
-      digitalWrite(fanPinA, LOW);
-      digitalWrite(fanPinB, LOW);
-    }
+    handleWindOff(); // 关闭风扇
   }
 
   // 检查新的LED灯倒计时
   if (dryLedState && (millis() - dryStartTime >= dryDuration)) {
-    dryLedState = false; // 倒计时结束后只更新新的LED灯状态为关闭
-    digitalWrite(dryLedPin, LOW);
-    dryingFanState = false;
-    if (!fanState) {
-      digitalWrite(fanPinA, LOW);
-      digitalWrite(fanPinB, LOW);
-    }
+    handleDryOff(); // 关闭新的LED灯和风扇
   }
 
   // 检查UV物理按钮
@@ -354,12 +360,10 @@ void loop() {
   if (digitalRead(dryControlButtonPin) == LOW) {
     delay(50); // 去抖动
     if (digitalRead(dryControlButtonPin) == LOW) {
-      if (fanState && dryLedState) {
-        handleWindOff(); // 关闭风扇
-        handleDryOff(); // 关闭LED灯
+      if (dryLedState) {
+        handleDryOff(); // 关闭LED灯和风扇
       } else {
-        handleWindOn(); // 打开风扇
-        handleDryOn(); // 打开LED灯
+        handleDryOn(); // 打开LED灯和风扇
       }
       while (digitalRead(dryControlButtonPin) == LOW) {
         delay(10); // 等待按钮释放

@@ -285,100 +285,6 @@ QLabel {
      <string>烘干开/关</string>
     </property>
    </widget>
-   <widget class="QLabel" name="uvLabel">
-    <property name="geometry">
-     <rect>
-      <x>187</x>
-      <y>170</y>
-      <width>81</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>-1</pointsize>
-      <weight>75</weight>
-      <bold>true</bold>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">QPushButton {
-    background-color: #efeeee; /* 沙棕色背景 */
-    color: white;
-    border: 2px solid #000;
-    border-radius: 5px;
-    padding: 5px;
-}
-
-QLabel {
-    color: red; /* 红色字体 */
-    font-size: 20px;
-    font-weight: bold;
-}
-</string>
-    </property>
-    <property name="text">
-     <string>TextLabel</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="windLabel">
-    <property name="geometry">
-     <rect>
-      <x>317</x>
-      <y>170</y>
-      <width>81</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">QPushButton {
-   background-color: #efeeee;  /* 沙棕色背景 */
-    color: white;
-    border: 2px solid #000;
-    border-radius: 5px;
-    padding: 5px;
-}
-
-QLabel {
-    color: red; /* 红色字体 */
-    font-size: 20px;
-    font-weight: bold;
-}
-</string>
-    </property>
-    <property name="text">
-     <string>TextLabel</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="dryLabel">
-    <property name="geometry">
-     <rect>
-      <x>427</x>
-      <y>170</y>
-      <width>81</width>
-      <height>31</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">QPushButton {
-    background-color: #efeeee;  /* 沙棕色背景 */
-    color: white;
-    border: 2px solid #000;
-    border-radius: 5px;
-    padding: 5px;
-}
-
-QLabel {
-    color: red; /* 红色字体 */
-    font-size: 20px;
-    font-weight: bold;
-}
-</string>
-    </property>
-    <property name="text">
-     <string>TextLabel</string>
-    </property>
-   </widget>
    <widget class="QPushButton" name="windButtonTimer">
     <property name="geometry">
      <rect>
@@ -462,7 +368,7 @@ QLabel {
    <widget class="QLabel" name="backgroundlabel">
     <property name="geometry">
      <rect>
-      <x>167</x>
+      <x>170</x>
       <y>150</y>
       <width>351</width>
       <height>111</height>
@@ -503,6 +409,57 @@ QLabel {
      <enum>Qt::Vertical</enum>
     </property>
    </widget>
+   <widget class="QLCDNumber" name="uvLcd">
+    <property name="geometry">
+     <rect>
+      <x>190</x>
+      <y>190</y>
+      <width>81</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLcd {
+    color: black; /* 红色字体 */
+    font-size: 30px;
+    font-weight: bold;
+}</string>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="windLcd">
+    <property name="geometry">
+     <rect>
+      <x>310</x>
+      <y>190</y>
+      <width>81</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLcd {
+    color: black; /* 红色字体 */
+    font-size: 30px;
+    font-weight: bold;
+}</string>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="dryLcd">
+    <property name="geometry">
+     <rect>
+      <x>430</x>
+      <y>190</y>
+      <width>71</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLcd {
+    color: black; /* 红色字体 */
+    font-size: 30px;
+    font-weight: bold;
+}</string>
+    </property>
+   </widget>
    <zorder>backgroundlabel</zorder>
    <zorder>upButton</zorder>
    <zorder>pauseButton</zorder>
@@ -511,13 +468,13 @@ QLabel {
    <zorder>uvButton</zorder>
    <zorder>windButton</zorder>
    <zorder>dryButton</zorder>
-   <zorder>uvLabel</zorder>
-   <zorder>windLabel</zorder>
-   <zorder>dryLabel</zorder>
    <zorder>windButtonTimer</zorder>
    <zorder>dryButtonTimer</zorder>
    <zorder>line</zorder>
    <zorder>line_2</zorder>
+   <zorder>uvLcd</zorder>
+   <zorder>windLcd</zorder>
+   <zorder>dryLcd</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
