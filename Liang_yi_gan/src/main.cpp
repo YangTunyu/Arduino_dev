@@ -319,6 +319,7 @@ void loop() {
   // 检查风扇倒计时
   if (fanState && (millis() - fanStartTime >= fanDuration)) {
     handleWindOff(); // 关闭风扇
+    fanDuration = defaultDuration;// 恢复默认风扇持续时间
   }
 
   // 检查新的LED灯倒计时
@@ -347,6 +348,7 @@ void loop() {
     if (digitalRead(fanButtonPin) == LOW) {
       if (fanState) {
         handleWindOff(); // 如果风扇打开则关闭
+        fanDuration = defaultDuration;// 恢复默认风扇持续时间
       } else {
         handleWindOn(); // 如果风扇关闭则打开
       }
@@ -362,6 +364,7 @@ void loop() {
     if (digitalRead(dryControlButtonPin) == LOW) {
       if (dryLedState) {
         handleDryOff(); // 关闭LED灯和风扇
+        dryDuration = defaultDuration;// 恢复默认风扇和LED灯持续时间
       } else {
         handleDryOn(); // 打开LED灯和风扇
       }
