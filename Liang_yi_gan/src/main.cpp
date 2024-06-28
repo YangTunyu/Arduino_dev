@@ -6,8 +6,8 @@
 #include <Arduino.h>
 
 // Wi-Fi 网络信息
-const char* ssid = "LengDian";
-const char* password = "22732100QT";
+String ssid; // 声明SSID变量
+String password; // 声明密码变量
 
 // 创建 Web 服务器对象，端口号为80
 WebServer server(80);
@@ -235,19 +235,27 @@ void setup() {
   pinMode(dryDurationButtonPin, INPUT_PULLUP); // 配置同时增加风扇和LED灯的运行时间的按钮引脚
 
   // 连接到 Wi-Fi
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-  WiFi.begin(ssid, password);
+  Serial.println("Start scanning the Wi-Fi network...");
+int numNetworks = WiFi.scanNetworks();
+Serial.println("Scan complete");
 
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.print(".");
-  }
-
-  Serial.println();
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
+if (numNetworks == 0) {
+ Serial.println("No Wi-Fi network found");
+} else {
+ Serial.print(numNetworks);
+ Serial.println("A Wi-Fi network was discovered");
+ for (int i = 0; i < numNetworks; ++i) {
+// 打印Wi-Fi网络信息
+Serial.print(i + 1);
+Serial.print(": ");
+Serial.print(WiFi.SSID(i));
+Serial.print(" (");
+Serial.print(WiFi.RSSI(i));
+Serial.print(")");
+Serial.println((WiFi.encryptionType(i) == WIFI_AUTH_OPEN)?" ":"*");
+delay(10);
+ }
+}
 
   // 启动服务器并指定处理函数
   server.on("/light_on", handleLightOn);
@@ -446,4 +454,40 @@ void loop() {
     buzzerState = false; // 关闭蜂鸣器
     initialWeight = scale.get_units() - INITIAL_WEIGHT; // 更新初始重量
   }
+
+  // 检查是否有串行数据
+if (Serial.available()) {
+// 读取SSID
+ if (ssid.isEmpty()) {
+  ssid = Serial.readStringUntil('\n');
+ssid.trim(); // 去除字符串前后的空格和换行符
+Serial.print("Please enter");
+Serial.print(ssid);
+Serial.println("Password of:");
+ } else {
+// 读取密码
+password = Serial.readStringUntil('\n');
+password.trim(); // 去除字符串前后的空格和换行符
+
+// 尝试连接到指定的Wi-Fi网络
+Serial.println("Try to connect to " + ssid);
+WiFi.begin(ssid.c_str(), password.c_str());
+
+// 等待连接
+while (WiFi.status() != WL_CONNECTED) {
+ delay(500);
+Serial.print(".");
+}
+
+// 连接成功
+Serial.println("");
+Serial.println("The Wi-Fi is connected");
+Serial.println("IP address: ");
+Serial.println(WiFi.localIP());
+
+// 清空SSID和密码变量，以便下次重新输入
+ssid = "";
+password = "";
+ }
+}
 }
